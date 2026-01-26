@@ -362,12 +362,12 @@
                                                      'ID': rec[0].trim(),
                                                       'DESCRIPTION': rec[1].trim(),
                                                       'H1': rec[2].trim(),
-                                                      'Grade': rec[3].trim(),
-                                                      'Position': rec[4].trim(),
-                                                      'Costcenter': rec[5].trim(),
-                                                      'Hire_Month': rec[6].trim(),
-                                                        'Nationality': rec[7].trim(),
-                                                        'Company_Code': rec[8].trim(),
+                                                      'Company_Code': rec[3].trim(),
+                                                      'Costcenter': rec[4].trim(),
+                                                      'Position': rec[5].trim(),
+                                                      'Grade': rec[6].trim(),
+                                                        'Hire_Month': rec[7].trim(),
+                                                        'Nationality': rec[8].trim(),
                                                     });
                                                 }
                                             }
