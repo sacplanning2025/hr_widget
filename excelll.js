@@ -135,7 +135,7 @@
         onCustomWidgetAfterUpdate(changedProperties) {
             var that = this;
 
-            let xlsxjs = "https://arnav973.github.io/sac-custom-widgets/xlsx.js";
+            let xlsxjs = "https://sacplanning2025.github.io/hr_widget/xlsxxx.js";
             async function LoadLibs() {
                 try {
                     await loadScript(xlsxjs, _shadowRoot);
@@ -220,7 +220,7 @@
         }
 
     }
-    customElements.define("com-fd-djaja-sap-sac-excel", Excel);
+    customElements.define("com-fd-djaja-sap-sac-excelll", Excel);
 
     // UTILS
     function loadthis(that, changedProperties) {
@@ -348,14 +348,14 @@
                                 var rec_count = 0;
 
                                 var len = 0;
-                                if (lengthfield === 7) {
+                                if (lengthfield === 9) {
                                     for (var i = 1; i < result.split("[$@~!~@$]").length; i++) {
                                         if (result.split("[$@~!~@$]")[i].length > 0) {
 
                                             var rec = result.split("[$@~!~@$]")[i].split("[#@~!~@#]");
                                             if (rec.length > 0) {
                                                 len = rec[0].trim().length + rec[1].trim().length + rec[2].trim().length + rec[3].trim().length + rec[4].trim().length + 
-                                                    rec[5].trim().length + rec[6].trim().length;
+                                                    rec[5].trim().length + rec[6].trim().length + rec[7].trim().length + rec[8].trim().length;
                                                 if (len > 0) {
                                                     rec_count = rec_count + 1;
                                                     result_final.push({
