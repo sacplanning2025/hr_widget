@@ -13,14 +13,14 @@
     {
       "kind": "main",
       "tag": "com-fd-djaja-sap-sac-excelll",
-      "url": "https://arnav973.github.io/sac-custom-widgets/excel.js",
+      "url": "https://sacplanning2025.github.io/hr_widget/excelll.js",
       "integrity": "",
       "ignoreIntegrity": true
     },
     {
       "kind": "styling",
       "tag": "com-fd-djaja-sap-sac-excelll-aps",
-      "url": "https://arnav973.github.io/sac-custom-widgets/aps_excel.js",
+      "url": "https://sacplanning2025.github.io/hr_widget/aps_excelll.js",
       "integrity": "",
       "ignoreIntegrity": true
     }
