@@ -355,26 +355,26 @@
                                 var len = 0;
                                result_final = [];
 
-    jsonData.forEach(function(row) {
-    if (
-        row.ID || row.Description || row.H1 ||
-        row.Company_Code || row.Costcenter ||
-        row.Position || row.Grade ||
-        row.Hire_Month || row.Nationality
-    ) {
-        result_final.push({
-            ID: (row.ID || "").toString().trim(),
-            DESCRIPTION: (row.Description || "").trim(),
-            H1: (row.H1 || "").trim(),
-            Company_Code: (row.Company_Code || "").trim(),
-            Costcenter: (row.Costcenter || "").trim(),
-            Position: (row.Position || "").trim(),
-            Grade: (row.Grade || "").trim(),
-            Hire_Month: (row.Hire_Month || "").trim(),
-            Nationality: (row.Nationality || "").trim()
-        });
-    }
-});
+                                    jsonData.forEach(function(row) {
+                                    if (
+                                        row.ID || row.Description || row.H1 ||
+                                        row.Company_Code || row.Costcenter ||
+                                        row.Position || row.Grade ||
+                                        row.Hire_Month || row.Nationality
+                                    ) {
+                                        result_final.push({
+                                            ID: (row.ID || "").toString().trim(),
+                                            DESCRIPTION: (row.Description || "").trim(),
+                                            H1: (row.H1 || "").trim(),
+                                            Company_Code: (row.Company_Code || "").trim(),
+                                            Costcenter: (row.Costcenter || "").trim(),
+                                            Position: (row.Position || "").trim(),
+                                            Grade: (row.Grade || "").trim(),
+                                            Hire_Month: (row.Hire_Month || "").trim(),
+                                            Nationality: (row.Nationality || "").trim()
+                                        });
+                                    }
+                                });
 
 
                                     if (result_final.length === 0) {
