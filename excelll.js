@@ -348,37 +348,24 @@
                                 var rec_count = 0;
 
                                 var len = 0;
-                               if (lengthfield >= 9) {
+                                if (lengthfield === 9) {
                                     for (var i = 1; i < result.split("[$@~!~@$]").length; i++) {
                                         if (result.split("[$@~!~@$]")[i].length > 0) {
-                                
-                                            var rec = result.split("[$@~!~@$]")[i]
-                                                .split("[#@~!~@#]")
-                                                .slice(0,9);   // Trim extra columns
-                                
+
+                                            var rec = result.split("[$@~!~@$]")[i].split("[#@~!~@#]");
                                             if (rec.length > 0) {
-                                                len =
-                                                    rec[0].trim().length +
-                                                    rec[1].trim().length +
-                                                    rec[2].trim().length +
-                                                    rec[3].trim().length +
-                                                    rec[4].trim().length +
-                                                    rec[5].trim().length +
-                                                    rec[6].trim().length +
-                                                    rec[7].trim().length +
-                                                    rec[8].trim().length;
-                                
+                                                len = rec[0].trim().length + rec[1].trim().length + rec[2].trim().length + rec[3].trim().length + rec[4].trim().length + 
+                                                    rec[5].trim().length + rec[6].trim().length + rec[7].trim().length + rec[8].trim().length;
                                                 if (len > 0) {
-                                                    rec_count++;
-                                
+                                                    rec_count = rec_count + 1;
                                                     result_final.push({
-                                                        'ID': rec[0].trim(),
-                                                        'DESCRIPTION': rec[1].trim(),
-                                                        'H1': rec[2].trim(),
-                                                        'Company_Code': rec[3].trim(),
-                                                        'Costcenter': rec[4].trim(),
-                                                        'Position': rec[5].trim(),
-                                                        'Grade': rec[6].trim(),
+                                                     'ID': rec[0].trim(),
+                                                      'DESCRIPTION': rec[1].trim(),
+                                                      'H1': rec[2].trim(),
+                                                      'Company_Code': rec[3].trim(),
+                                                      'Costcenter': rec[4].trim(),
+                                                      'Position': rec[5].trim(),
+                                                      'Grade': rec[6].trim(),
                                                         'Hire_Month': rec[7].trim(),
                                                         'Nationality': rec[8].trim(),
                                                     });
@@ -386,7 +373,6 @@
                                             }
                                         }
                                     }
-                                }
 
                                     if (result_final.length === 0) {
                                         fU.setValue("");
