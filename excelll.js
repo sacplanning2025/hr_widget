@@ -411,10 +411,6 @@
       sap.m.MessageToast.show("Please upload the correct file");
     }
   };
-
-  // Works for xlsx/xlsm
-  reader.readAsBinaryString(file);
-},
                             } else {
                                 this_.runNext();
                                 console.log("Error: wrong Excel File template");
