@@ -343,119 +343,76 @@
                             if (correctsheet) {
                                 var lengthfield = result.split("[$@~!~@$]")[0].split("[#@~!~@#]").length;
                                 console.log("lengthfield: " + lengthfield);
-
-                                var total = this_.getView().byId("total");
-                                var rec_count = 0;
-
-                                var len = 0;
+                            
                                 if (lengthfield >= 9) {
-                                    for (var i = 1; i < result.split("[$@~!~@$]").length; i++) {
-                                        if (result.split("[$@~!~@$]")[i].length > 0) {
-
-                                            var rec = result.split("[$@~!~@$]")[i].split("[#@~!~@#]");
-                                            if (rec.length > 0) {
-                                                len = rec[0].trim().length + rec[1].trim().length + rec[2].trim().length + rec[3].trim().length + rec[4].trim().length + 
-                                                    rec[5].trim().length + rec[6].trim().length + rec[7].trim().length + rec[8].trim().length;
-                                                if (len > 0) {
-                                                    rec_count = rec_count + 1;
-                                                    result_final.push({
-                                                     'ID': rec[0].trim(),
-                                                      'DESCRIPTION': rec[1].trim(),
-                                                      'H1': rec[2].trim(),
-                                                      'Company_Code': rec[3].trim(),
-                                                      'Costcenter': rec[4].trim(),
-                                                      'Position': rec[5].trim(),
-                                                      'Grade': rec[6].trim(),
-                                                        'Hire_Month': rec[7].trim(),
-                                                        'Nationality': rec[8].trim(),
-                                                    });
-                                                }
-                                            }
+                              result_final = [];
+                                        for (var i = 1; i < result.split("[$@~!~@$]").length; i++) {
+                    
+                                        var rec = result
+                                            .split("[$@~!~@$]")[i]
+                                            .split("[#@~!~@#]");
+                    
+                                        if (
+                                            rec[0] || rec[1] || rec[2] || rec[3] ||
+                                            rec[4] || rec[5] || rec[6] || rec[7] || rec[8]
+                                        ) {
+                                            result_final.push({
+                                                ID: (rec[0] || "").trim(),
+                                                DESCRIPTION: (rec[1] || "").trim(),
+                                                H1: (rec[2] || "").trim(),
+                                                Company_Code: (rec[3] || "").trim(),
+                                                Costcenter: (rec[4] || "").trim(),
+                                                Position: (rec[5] || "").trim(),
+                                                Grade: (rec[6] || "").trim(),
+                                                Hire_Month: (rec[7] || "").trim(),
+                                                Nationality: (rec[8] || "").trim()
+                                            });
                                         }
                                     }
-
+                    
+                                    /* ================= POST CHECKS ================= */
                                     if (result_final.length === 0) {
                                         fU.setValue("");
-                                        MessageToast.show("There is no record to be uploaded");
+                                        sap.m.MessageToast.show("There is no record to be uploaded");
                                         this_.runNext();
-                                    } else if (result_final.length >= 2001) {
-                                        fU.setValue("");
-                                        MessageToast.show("Maximum records are 2000.");
-                                        this_.runNext();
-                                    } else {
-                                        // Bind the data to the Table
-                                        oModel = new JSONModel();
-                                        oModel.setSizeLimit("5000");
-                                        oModel.setData({
-                                            result_final: result_final
-                                        });
-
-                                        var oModel1 = new sap.ui.model.json.JSONModel();
-                                        oModel1.setData({
-                                            fname: file.name,
-                                        });
-                                        console.log(oModel);
-
-                                        // var oHeaders =  {
-                                        //     "Authorization": "Basic XXXXXXXX",
-                                        //     "Content-Type": "application/x-www-form-urlencoded"
-                                        // }
-
-                                        _result = JSON.stringify(result_final);
-
-                                        that._firePropertiesChanged();
-                                            this.settings = {};
-                                            this.settings.result = "";
-
-                                            that.dispatchEvent(new CustomEvent("onStart", {
-                                                detail: {
-                                                    settings: this.settings
-                                                }
-                                            }));
-
-                                            this_.runNext();
-
-                                        //var oModel = new JSONModel();
-
-                                        //console.log(result_final);
-                                        //oModel.loadData("processData.xsjs", JSON.stringify(result_final), true, 'POST', false, true, oHeaders);
-
-                                        // oModel.attachRequestCompleted(function() {
-                                        //     var result = oModel.getData();
-                                        //     console.log(result);
-
-                                        //     _result = result;
-
-                                        //     that._firePropertiesChanged();
-                                        //     this.settings = {};
-                                        //     this.settings.result = "";
-
-                                        //     that.dispatchEvent(new CustomEvent("onStart", {
-                                        //         detail: {
-                                        //             settings: this.settings
-                                        //         }
-                                        //     }));
-
-                                        //     this_.runNext();
-
-                                        // });
-
-
-                                        fU.setValue("");
+                                        return;
                                     }
+                    
+                                    if (result_final.length >= 2001) {
+                                        fU.setValue("");
+                                        sap.m.MessageToast.show("Maximum records are 2000.");
+                                        this_.runNext();
+                                        return;
+                                    }
+                    
+                                    oModel = new sap.ui.model.json.JSONModel();
+                                    oModel.setSizeLimit(5000);
+                                    oModel.setData({ result_final: result_final });
+                    
+                                    _result = JSON.stringify(result_final);
+                                    that._firePropertiesChanged();
+                    
+                                    that.dispatchEvent(new CustomEvent("onStart", {
+                                        detail: { settings: {} }
+                                    }));
+                    
+                                    this_.runNext();
+                                    fU.setValue("");
+                    
                                 } else {
                                     this_.runNext();
                                     fU.setValue("");
-                                    MessageToast.show("Please upload the correct file");
+                                    sap.m.MessageToast.show("Please upload the correct file");
                                 }
+                    
                             } else {
                                 this_.runNext();
-                                console.log("Error: wrong Excel File template");
-                                MessageToast.show("Please upload the correct file");
+                                fU.setValue("");
+                                sap.m.MessageToast.show("Please upload the correct file");
                             }
                         };
-
-                        if (typeof file !== 'undefined') {
+                    
+                        if (typeof file !== "undefined") {
                             reader.readAsBinaryString(file);
                         }
                     },
