@@ -363,7 +363,7 @@
                                                 Company_Code: (rec[3] || "").trim(),
                                                 Costcenter: (rec[4] || "").trim(),
                                                 Position: (rec[5] || "").trim(),
-                                                Grade: (rec[6] || "").trim(),
+                                                ZZ_PAY_GRADE_LVL: (rec[6] || "").trim(),
                                                 Hire_Month: (rec[7] || "").trim(),
                                                 Nationality: (rec[8] || "").trim()
                                             });
