@@ -344,7 +344,7 @@
                                 var lengthfield = result.split("[$@~!~@$]")[0].split("[#@~!~@#]").length;
                                 console.log("lengthfield: " + lengthfield);
                             
-                                if (lengthfield >= 9) {
+                                if (lengthfield >= 18) {
                               result_final = [];
                                         for (var i = 1; i < result.split("[$@~!~@$]").length; i++) {
                     
@@ -355,6 +355,8 @@
                                         if (
                                             rec[0] || rec[1] || rec[2] || rec[3] ||
                                             rec[4] || rec[5] || rec[6] || rec[7] || rec[8]
+                                            rec[9] || rec[10] || rec[11] || rec[12] || rec[13]
+                                            rec[14] || rec[15] || rec[16] || rec[17]
                                         ) {
                                             result_final.push({
                                                 ID: (rec[0] || "").trim(),
@@ -362,10 +364,19 @@
                                                 H1: (rec[2] || "").trim(),
                                                 Company_Code: (rec[3] || "").trim(),
                                                 Costcenter: (rec[4] || "").trim(),
-                                                Position: (rec[5] || "").trim(),
-                                                ZZ_PAY_GRADE_LVL: (rec[6] || "").trim(),
-                                                Hire_Month: (rec[7] || "").trim(),
-                                                Nationality: (rec[8] || "").trim()
+                                                Division: (rec[5] || "").trim(),
+                                                Department: (rec[6] || "").trim(),
+                                                Position: (rec[7] || "").trim(),
+                                                Position_Name: (rec[8] || "").trim(),
+                                                ZZ_PAY_GRADE_LVL: (rec[9] || "").trim(),
+                                                Hire_Month: (rec[10] || "").trim(),
+                                                Nationality: (rec[11] || "").trim(),
+                                                Med_Insu_class: (rec[12] || "").trim(),
+                                                No_of_dependents: (rec[13] || "").trim(),
+                                                ACCOM: (rec[14] || "").trim(),
+                                                TRANSPORT: (rec[15] || "").trim(),
+                                                EMP_CLASS: (rec[16] || "").trim(),
+                                                OT: (rec[17] || "").trim(),
                                             });
                                         }
                                     }
