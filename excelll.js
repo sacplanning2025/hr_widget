@@ -354,9 +354,10 @@
                     
                                         if (
                                             rec[0] || rec[1] || rec[2] || rec[3] ||
-                                            rec[4] || rec[5] || rec[6] || rec[7] || rec[8] ||
-                                            rec[9] || rec[10] || rec[11] || rec[12] || rec[13] ||
-                                            rec[14] || rec[15] || rec[16] || rec[17]
+                                            rec[4] || rec[5] || rec[6] || rec[7] ||
+                                            rec[8] || rec[9] || rec[10] || rec[11] ||
+                                            rec[12] || rec[13] || rec[14] || rec[15] ||
+                                            rec[16] || rec[17]
                                         ) {
                                             result_final.push({
                                                 ID: (rec[0] || "").trim(),
