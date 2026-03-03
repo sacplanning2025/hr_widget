@@ -310,16 +310,13 @@
 
                      this_.wasteTime();*/
 
-                        onValidate: function (e) {
-
+                       onValidate: function (e) {
                         var fU = this.getView().byId("idfileUploader");
+                        var file = $("#__xmlview1--idfileUploader-fu")[0].files[0];
                         var this_ = this;
                     
-                        // ✅ SAFE UI5 way (no hardcoded DOM ID)
-                        var file = fU.getFocusDomRef().files[0];
-                    
-                        // ⚠️ Check if user selected a file
-                        if (!file) {
+                        // ⚠️ Check if file is selected
+                        if (typeof file === "undefined") {
                             sap.m.MessageToast.show("Please select a file before clicking Upload");
                             return;
                         }
