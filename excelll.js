@@ -300,7 +300,7 @@
                         }
                     },
 
-                    onValidate: function (e) {
+                    /*onValidate: function (e) {
                     var fU = this.getView().byId("idfileUploader");
                     //var domRef = fU.getFocusDomRef();
                     //var domRef = this.getView().byId("__xmlview1--idfileUploader-fu").getFocusDomRef();
@@ -381,7 +381,7 @@
                                         }
                                     }
                     
-                                    /* ================= POST CHECKS ================= */
+                                   
                                     if (result_final.length === 0) {
                                         fU.setValue("");
                                         sap.m.MessageToast.show("There is no record to be uploaded");
@@ -425,7 +425,154 @@
                     
                         if (typeof file !== "undefined") {
                             reader.readAsBinaryString(file);
-                        }
+                        }*/
+
+                    onValidate: function (e) {
+
+    var fU = this.getView().byId("idfileUploader");
+    var this_ = this;
+
+    // ✅ SAFE UI5 way (no hardcoded DOM ID)
+    var file = fU.getFocusDomRef().files[0];
+
+    // ⚠️ Check if user selected a file
+    if (!file) {
+        sap.m.MessageToast.show("Please select a file before clicking Upload");
+        return;
+    }
+
+    this_.wasteTime();
+
+    var oModel = new JSONModel();
+    oModel.setData({
+        result_final: null
+    });
+
+    var reader = new FileReader();
+
+    reader.onload = async function (e) {
+
+        var strCSV = e.target.result;
+
+        var workbook = XLSX.read(strCSV, {
+            type: 'binary'
+        });
+
+        var result_final = [];
+        var result = [];
+        var correctsheet = false;
+
+        workbook.SheetNames.forEach(function (sheetName) {
+
+            if (sheetName === "Sheet1") {
+
+                correctsheet = true;
+
+                var csv = XLSX.utils.sheet_to_csv(workbook.Sheets[sheetName]);
+
+                if (csv.length) {
+                    result.push(csv);
+                }
+
+                result = result.join("[$@~!~@$]");
+            }
+        });
+
+        if (correctsheet) {
+
+            var lengthfield = result.split("[$@~!~@$]")[0].split("[#@~!~@#]").length;
+
+            console.log("lengthfield: " + lengthfield);
+
+            if (lengthfield >= 17) {
+
+                result_final = [];
+
+                for (var i = 1; i < result.split("[$@~!~@$]").length; i++) {
+
+                    var rec = result
+                        .split("[$@~!~@$]")[i]
+                        .split("[#@~!~@#]");
+
+                    if (
+                        rec[0] || rec[1] || rec[2] || rec[3] ||
+                        rec[4] || rec[5] || rec[6] || rec[7] ||
+                        rec[8] || rec[9] || rec[10] || rec[11] ||
+                        rec[12] || rec[13] || rec[14] || rec[15] ||
+                        rec[16]
+                    ) {
+
+                        result_final.push({
+                            ID: (rec[0] || "").trim(),
+                            DESCRIPTION: (rec[1] || "").trim(),
+                            H1: (rec[2] || "").trim(),
+                            Company_Code: (rec[3] || "").trim(),
+                            Costcenter: (rec[4] || "").trim(),
+                            Division: (rec[5] || "").trim(),
+                            Department: (rec[6] || "").trim(),
+                            Position: (rec[7] || "").trim(),
+                            ZZ_PAY_GRADE_LVL: (rec[8] || "").trim(),
+                            Hire_Month: (rec[9] || "").trim(),
+                            Nationality: (rec[10] || "").trim(),
+                            Med_Insu_class: (rec[11] || "").trim(),
+                            No_of_dependents: (rec[12] || "").trim(),
+                            ACCOM: (rec[13] || "").trim(),
+                            TRANSPORT: (rec[14] || "").trim(),
+                            EMP_CLASS: (rec[15] || "").trim(),
+                            OT: (rec[16] || "").trim(),
+                        });
+                    }
+                }
+
+                if (result_final.length === 0) {
+                    fU.setValue("");
+                    sap.m.MessageToast.show("There is no record to be uploaded");
+                    this_.runNext();
+                    return;
+                }
+
+                if (result_final.length >= 2001) {
+                    fU.setValue("");
+                    sap.m.MessageToast.show("Maximum records are 2000.");
+                    this_.runNext();
+                    return;
+                }
+
+                oModel = new sap.ui.model.json.JSONModel();
+                oModel.setSizeLimit(5000);
+                oModel.setData({ result_final: result_final });
+
+                _result = JSON.stringify(result_final);
+
+                that._firePropertiesChanged();
+
+                that.dispatchEvent(new CustomEvent("onStart", {
+                    detail: { settings: {} }
+                }));
+
+                this_.runNext();
+
+                fU.setValue("");
+
+            } else {
+
+                this_.runNext();
+                fU.setValue("");
+
+                sap.m.MessageToast.show("Please upload the correct file");
+            }
+
+        } else {
+
+            this_.runNext();
+            fU.setValue("");
+
+            sap.m.MessageToast.show("Please upload the correct file");
+        }
+    };
+
+    reader.readAsBinaryString(file);
+}
                     },
 
                     wasteTime: function() {
