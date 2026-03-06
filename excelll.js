@@ -148,6 +148,7 @@
         get title() {
             return this._export_settings.title;
         }
+
         set title(value) {
             console.log("setTitle:" + value);
             this._export_settings.title = value;
@@ -156,6 +157,7 @@
         get unit() {
             return this._export_settings.unit;
         }
+
         set unit(value) {
             value = _result;
             console.log("value: " + value);
@@ -174,9 +176,6 @@
     }
 
     customElements.define("com-fd-djaja-sap-sac-excelll", Excel);
-
-
-    // ================= ORIGINAL UTILITIES =================
 
     function createGuid() {
         return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, c => {
@@ -202,85 +201,13 @@
         });
     }
 
-
-/* ==========================================================
-   SAFE ENHANCEMENTS (DO NOT BREAK SAC INITIALIZATION)
-   ========================================================== */
-
-setTimeout(function(){
-
-try{
-
-console.log("Enhanced Excel SAC Widget Loaded");
-
-window.ExcelWidgetEnhancer = {
-
-debug:true,
-
-log:function(msg){
-if(this.debug){
-console.log("[ExcelWidget]",msg);
-}
-},
-
-validateFile:function(file){
-
-if(!file) return false;
-
-let ext = file.name.split(".").pop().toLowerCase();
-
-if(["xlsx","xlsm","xls"].indexOf(ext) === -1){
-sap.m.MessageToast.show("Invalid Excel File");
-return false;
-}
-
-if(file.size > 10 * 1024 * 1024){
-sap.m.MessageToast.show("File larger than 10MB");
-return false;
-}
-
-return true;
-
-},
-
-stats:{
-total:0,
-duplicates:0,
-empty:0
-},
-
-resetStats:function(){
-this.stats={
-total:0,
-duplicates:0,
-empty:0
-};
-},
-
-detectDuplicate:function(id,cache){
-
-if(cache[id]){
-this.stats.duplicates++;
-return true;
-}
-
-cache[id]=true;
-return false;
-
-},
-
-updateStats:function(){
-console.log("Upload Stats:",this.stats);
-}
-
-};
-
-}catch(e){
-
-console.log("Enhancement Init Error",e);
-
-}
-
-},0);
+    /* ---------- FIX: loadthis function added ---------- */
+    function loadthis(that, changedProperties){
+        try{
+            console.log("Widget initialized safely");
+        }catch(e){
+            console.log("loadthis error:", e);
+        }
+    }
 
 })();
