@@ -494,118 +494,282 @@
 //
 //
 /* =========================================================
-   FILE PROCESSING LOADER EXTENSION
-   (Adds loading indicator without modifying original code)
+   ENTERPRISE FEATURE EXTENSION LAYER
+   (Adds features without modifying original widget)
    ========================================================= */
 
 (function(){
 
-/* ===============================
-   CREATE LOADER
-   =============================== */
+window.ExcelEnterpriseEngine = {
 
-function createLoader(){
+previewContainer:null,
+errorRecords:[],
+mappedColumns:{},
+maxRows:50000,
 
-    if(document.getElementById("excelProcessingLoader")) return;
+/* ================================
+   DRAG & DROP UPLOAD
+   ================================ */
 
-    const loader = document.createElement("div");
+initDragDrop:function(widget){
 
-    loader.id = "excelProcessingLoader";
+const dropArea = widget.shadowRoot;
 
-    loader.style.position = "fixed";
-    loader.style.top = "0";
-    loader.style.left = "0";
-    loader.style.width = "100%";
-    loader.style.height = "100%";
-    loader.style.background = "rgba(255,255,255,0.85)";
-    loader.style.display = "none";
-    loader.style.alignItems = "center";
-    loader.style.justifyContent = "center";
-    loader.style.zIndex = "999999";
+dropArea.addEventListener("dragover", e=>{
+e.preventDefault();
+dropArea.style.border="2px dashed #0070f2";
+});
 
-    loader.innerHTML = `
-        <div style="text-align:center;font-family:Arial">
+dropArea.addEventListener("dragleave", e=>{
+dropArea.style.border="none";
+});
 
-            <div style="
-                border:6px solid #f3f3f3;
-                border-top:6px solid #0070f2;
-                border-radius:50%;
-                width:60px;
-                height:60px;
-                animation:excelSpin 1s linear infinite;
-                margin:auto;
-            "></div>
+dropArea.addEventListener("drop", e=>{
 
-            <div style="margin-top:15px;font-size:16px;color:#333">
-                Processing Excel File...
-            </div>
+e.preventDefault();
 
-        </div>
-    `;
+let file = e.dataTransfer.files[0];
 
-    document.body.appendChild(loader);
+if(file){
 
-    const style = document.createElement("style");
+console.log("DragDrop Upload:",file.name);
 
-    style.innerHTML = `
-        @keyframes excelSpin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-    `;
+ExcelEnterpriseEngine.processExcel(file,widget);
 
-    document.head.appendChild(style);
 }
 
+});
 
-/* ===============================
-   SHOW LOADER
-   =============================== */
+},
 
-window.showExcelLoader = function(){
+/* ================================
+   TEMPLATE GENERATOR
+   ================================ */
 
-    createLoader();
+generateTemplate:function(){
 
-    const loader = document.getElementById("excelProcessingLoader");
+const headers=[
+"ID","DESCRIPTION","H1","Company_Code","Costcenter","Division",
+"Department","Position","ZZ_PAY_GRADE_LVL","Hire_Month",
+"Nationality","Med_Insu_class","No_of_dependents","ACCOM",
+"TRANSPORT","EMP_CLASS","OT"
+];
 
-    if(loader){
-        loader.style.display = "flex";
-    }
+const ws = XLSX.utils.json_to_sheet([]);
+XLSX.utils.sheet_add_aoa(ws,[headers]);
+
+const wb = XLSX.utils.book_new();
+XLSX.utils.book_append_sheet(wb,ws,"Sheet1");
+
+XLSX.writeFile(wb,"SAC_UPLOAD_TEMPLATE.xlsx");
+
+},
+
+/* ================================
+   PREVIEW TABLE
+   ================================ */
+
+renderPreview:function(data){
+
+if(!this.previewContainer){
+
+this.previewContainer=document.createElement("div");
+
+this.previewContainer.style.maxHeight="250px";
+this.previewContainer.style.overflow="auto";
+this.previewContainer.style.border="1px solid #ccc";
+this.previewContainer.style.marginTop="10px";
+
+document.body.appendChild(this.previewContainer);
+
+}
+
+let table="<table style='border-collapse:collapse;width:100%'>";
+
+let cols=Object.keys(data[0]);
+
+table+="<tr>";
+
+cols.forEach(c=>{
+table+="<th style='border:1px solid #ddd;padding:4px'>"+c+"</th>";
+});
+
+table+="</tr>";
+
+data.slice(0,50).forEach(row=>{
+
+table+="<tr>";
+
+cols.forEach(c=>{
+table+="<td style='border:1px solid #ddd;padding:4px'>"+row[c]+"</td>";
+});
+
+table+="</tr>";
+
+});
+
+table+="</table>";
+
+this.previewContainer.innerHTML=table;
+
+},
+
+/* ================================
+   COLUMN AUTO MAPPING
+   ================================ */
+
+autoMapColumns:function(headers){
+
+const expected=[
+"ID","DESCRIPTION","H1","Company_Code","Costcenter","Division",
+"Department","Position","ZZ_PAY_GRADE_LVL","Hire_Month",
+"Nationality","Med_Insu_class","No_of_dependents","ACCOM",
+"TRANSPORT","EMP_CLASS","OT"
+];
+
+let mapping={};
+
+headers.forEach(h=>{
+
+let match=expected.find(e=>e.toLowerCase()==h.toLowerCase());
+
+if(match){
+mapping[h]=match;
+}
+
+});
+
+this.mappedColumns=mapping;
+
+console.log("Column Mapping:",mapping);
+
+},
+
+/* ================================
+   VALIDATION ENGINE
+   ================================ */
+
+validateRows:function(rows){
+
+this.errorRecords=[];
+
+rows.forEach((row,index)=>{
+
+if(!row.ID){
+
+row.ERROR="Missing ID";
+this.errorRecords.push(row);
+
+}
+
+if(!row.Company_Code){
+
+row.ERROR="Missing Company Code";
+this.errorRecords.push(row);
+
+}
+
+});
+
+},
+
+/* ================================
+   ERROR EXCEL DOWNLOAD
+   ================================ */
+
+downloadErrors:function(){
+
+if(this.errorRecords.length===0){
+
+alert("No errors found");
+
+return;
+
+}
+
+const ws=XLSX.utils.json_to_sheet(this.errorRecords);
+
+const wb=XLSX.utils.book_new();
+XLSX.utils.book_append_sheet(wb,ws,"Errors");
+
+XLSX.writeFile(wb,"UPLOAD_ERRORS.xlsx");
+
+},
+
+/* ================================
+   50K ROW PROCESSOR
+   ================================ */
+
+processExcel:function(file,widget){
+
+const reader=new FileReader();
+
+reader.onload=(e)=>{
+
+const workbook=XLSX.read(e.target.result,{type:"binary"});
+
+const sheet=workbook.Sheets[workbook.SheetNames[0]];
+
+const data=XLSX.utils.sheet_to_json(sheet);
+
+if(data.length>this.maxRows){
+
+alert("Maximum supported rows 50,000");
+
+return;
+
+}
+
+this.autoMapColumns(Object.keys(data[0]));
+
+this.validateRows(data);
+
+this.renderPreview(data);
+
+widget.dispatchEvent(new CustomEvent("ExcelEnterpriseReady",{
+
+detail:{
+rows:data.length,
+errors:this.errorRecords.length
+}
+
+}));
+
+};
+
+reader.readAsBinaryString(file);
+
+}
 
 };
 
 
-/* ===============================
-   HIDE LOADER
-   =============================== */
+/* ================================
+   SAC EVENT INTEGRATION
+   ================================ */
 
-window.hideExcelLoader = function(){
+document.addEventListener("onStart",function(e){
 
-    const loader = document.getElementById("excelProcessingLoader");
-
-    if(loader){
-        loader.style.display = "none";
-    }
-
-};
-
-
-/* ===============================
-   HOOK INTO EXISTING EVENTS
-   =============================== */
-
-document.addEventListener("onStart",function(){
-
-    showExcelLoader();
+console.log("SAC Event Triggered",e);
 
 });
 
 
-document.addEventListener("ExcelEnterpriseReady",function(){
+/* ================================
+   AUTO INITIALIZATION
+   ================================ */
 
-    hideExcelLoader();
+document.addEventListener("DOMContentLoaded",()=>{
+
+document.querySelectorAll("com-fd-djaja-sap-sac-excelll").forEach(widget=>{
+
+ExcelEnterpriseEngine.initDragDrop(widget);
 
 });
+
+});
+
+})();
 
 
 })();
