@@ -489,3 +489,123 @@
         });
     }
 })();  
+
+//
+//
+//
+/* =========================================================
+   FILE PROCESSING LOADER EXTENSION
+   (Adds loading indicator without modifying original code)
+   ========================================================= */
+
+(function(){
+
+/* ===============================
+   CREATE LOADER
+   =============================== */
+
+function createLoader(){
+
+    if(document.getElementById("excelProcessingLoader")) return;
+
+    const loader = document.createElement("div");
+
+    loader.id = "excelProcessingLoader";
+
+    loader.style.position = "fixed";
+    loader.style.top = "0";
+    loader.style.left = "0";
+    loader.style.width = "100%";
+    loader.style.height = "100%";
+    loader.style.background = "rgba(255,255,255,0.85)";
+    loader.style.display = "none";
+    loader.style.alignItems = "center";
+    loader.style.justifyContent = "center";
+    loader.style.zIndex = "999999";
+
+    loader.innerHTML = `
+        <div style="text-align:center;font-family:Arial">
+
+            <div style="
+                border:6px solid #f3f3f3;
+                border-top:6px solid #0070f2;
+                border-radius:50%;
+                width:60px;
+                height:60px;
+                animation:excelSpin 1s linear infinite;
+                margin:auto;
+            "></div>
+
+            <div style="margin-top:15px;font-size:16px;color:#333">
+                Processing Excel File...
+            </div>
+
+        </div>
+    `;
+
+    document.body.appendChild(loader);
+
+    const style = document.createElement("style");
+
+    style.innerHTML = `
+        @keyframes excelSpin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    `;
+
+    document.head.appendChild(style);
+}
+
+
+/* ===============================
+   SHOW LOADER
+   =============================== */
+
+window.showExcelLoader = function(){
+
+    createLoader();
+
+    const loader = document.getElementById("excelProcessingLoader");
+
+    if(loader){
+        loader.style.display = "flex";
+    }
+
+};
+
+
+/* ===============================
+   HIDE LOADER
+   =============================== */
+
+window.hideExcelLoader = function(){
+
+    const loader = document.getElementById("excelProcessingLoader");
+
+    if(loader){
+        loader.style.display = "none";
+    }
+
+};
+
+
+/* ===============================
+   HOOK INTO EXISTING EVENTS
+   =============================== */
+
+document.addEventListener("onStart",function(){
+
+    showExcelLoader();
+
+});
+
+
+document.addEventListener("ExcelEnterpriseReady",function(){
+
+    hideExcelLoader();
+
+});
+
+
+})();
