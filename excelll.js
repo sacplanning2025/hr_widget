@@ -1,340 +1,352 @@
 (function() {
 
-let _shadowRoot;
-let _id;
-let _result;
-let div;
-let widgetName;
-var Ar = [];
-
-let CONFIG = {
-MAX_ROWS: 2000,
-MAX_FILE_SIZE: 10 * 1024 * 1024,
-ALLOWED_TYPES: ["xlsx","xlsm","xls"],
-DEBUG: true
-};
-
-let uploadStats = {
-totalRows:0,
-validRows:0,
-duplicateRows:0,
-emptyRows:0
-};
+    let _shadowRoot;
+    let _id;
+    let _result ;
+
+    let div;
+    let widgetName;
+    var Ar = [];
+
+    // ================= ENHANCEMENT CONFIG =================
+    var UploadConfig = {
+        MAX_FILE_SIZE: 10 * 1024 * 1024,
+        MAX_RECORDS: 2000,
+        ALLOWED_TYPES: ["xlsm","xlsx","xls"],
+        DEBUG:true
+    };
+
+    var UploadStats = {
+        totalRows:0,
+        validRows:0,
+        duplicateRows:0,
+        emptyRows:0
+    };
+
+    let tmpl = document.createElement("template");
+    tmpl.innerHTML = `
+      <style>
+
+      .drag-zone{
+        border:2px dashed #0070f2;
+        padding:15px;
+        border-radius:6px;
+        text-align:center;
+        margin-bottom:6px;
+        cursor:pointer;
+      }
 
-let tmpl = document.createElement("template");
+      .drag-zone.dragover{
+        background:#e8f2ff;
+      }
 
-tmpl.innerHTML = `
-<style>
+      .upload-progress{
+        width:100%;
+        height:6px;
+        background:#ddd;
+        border-radius:4px;
+        margin-top:6px;
+      }
 
-.upload-wrapper{
-padding:10px;
-border:1px solid #dcdcdc;
-border-radius:6px;
-background:#fafafa;
-font-family:Arial;
-}
+      .upload-progress-bar{
+        height:100%;
+        width:0%;
+        background:#0070f2;
+        transition:width .4s;
+      }
 
-.drag-area{
-border:2px dashed #0070f2;
-padding:20px;
-text-align:center;
-margin-bottom:10px;
-border-radius:6px;
-background:#ffffff;
-cursor:pointer;
-}
+      </style>
+    `;
+
+    class Excel extends HTMLElement {
 
-.drag-area.dragover{
-background:#e8f2ff;
-}
+        constructor() {
+            super();
 
-.progress{
-width:100%;
-height:8px;
-background:#ddd;
-border-radius:5px;
-margin-top:8px;
-}
+            _shadowRoot = this.attachShadow({
+                mode: "open"
+            });
+            _shadowRoot.appendChild(tmpl.content.cloneNode(true));
 
-.progress-bar{
-width:0%;
-height:100%;
-background:#0070f2;
-transition:width 0.4s;
-}
+            _id = createGuid();
 
-.file-info{
-font-size:11px;
-color:#666;
-margin-top:4px;
-}
+            this._export_settings = {};
+            this._export_settings.title = "";
+            this._export_settings.subtitle = "";
+            this._export_settings.icon = "";
+            this._export_settings.unit = "";
+            this._export_settings.footer = "";
 
-.stats{
-font-size:11px;
-margin-top:6px;
-color:#444;
-}
+            this._firstConnection = 0;
 
-</style>
+            this.addEventListener("click", event => {
+                console.log('click');
+            });
 
-<div class="upload-wrapper">
+        }
 
-<div class="drag-area" id="dragArea">
-Drop Excel File Here or Click to Upload
-</div>
+        connectedCallback() {
 
-<div class="file-info" id="fileInfo"></div>
+            // ================= DRAG DROP ENHANCEMENT =================
 
-<div class="progress">
-<div class="progress-bar" id="progressBar"></div>
-</div>
+            setTimeout(()=>{
 
-<div class="stats" id="uploadStats"></div>
+                let uploader = _shadowRoot.querySelector("input[type=file]");
 
-</div>
-`;
+                if(!uploader) return;
 
-class Excel extends HTMLElement {
+                uploader.addEventListener("dragover",(e)=>{
+                    e.preventDefault();
+                    uploader.classList.add("dragover");
+                });
 
-constructor(){
+                uploader.addEventListener("dragleave",(e)=>{
+                    uploader.classList.remove("dragover");
+                });
 
-super();
+                uploader.addEventListener("drop",(e)=>{
+                    e.preventDefault();
+                    uploader.classList.remove("dragover");
+                    uploader.files = e.dataTransfer.files;
+                });
 
-_shadowRoot = this.attachShadow({mode:"open"});
-_shadowRoot.appendChild(tmpl.content.cloneNode(true));
+            },1000);
 
-_id = createGuid();
+            try {
+                if (window.commonApp) {
+                    let outlineContainer = commonApp.getShell().findElements(true, ele => ele.hasStyleClass && ele.hasStyleClass("sapAppBuildingOutline"))[0];
 
-this._export_settings={};
-this._firstConnection=0;
+                    if (outlineContainer && outlineContainer.getReactProps) {
 
-this.initializeDragDrop();
+                        let parseReactState = state => {
 
-}
+                            let components = {};
+                            let globalState = state.globalState;
+                            let instances = globalState.instances;
+                            let app = instances.app["[{\"app\":\"MAIN_APPLICATION\"}]"];
+                            let names = app.names;
 
-initializeDragDrop(){
+                            for (let key in names) {
 
-setTimeout(()=>{
+                                let name = names[key];
 
-let dragArea=_shadowRoot.getElementById("dragArea");
+                                let obj = JSON.parse(key).pop();
+                                let type = Object.keys(obj)[0];
+                                let id = obj[type];
 
-if(!dragArea) return;
+                                components[id] = {
+                                    type: type,
+                                    name: name
+                                };
 
-dragArea.addEventListener("dragover",(e)=>{
-e.preventDefault();
-dragArea.classList.add("dragover");
-});
+                            }
 
-dragArea.addEventListener("dragleave",(e)=>{
-dragArea.classList.remove("dragover");
-});
+                            let metadata = JSON.stringify({
+                                components: components,
+                                vars: app.globalVars
+                            });
 
-dragArea.addEventListener("drop",(e)=>{
+                            if (metadata != this.metadata) {
 
-e.preventDefault();
-dragArea.classList.remove("dragover");
+                                this.metadata = metadata;
 
-let file=e.dataTransfer.files[0];
-this.handleFile(file);
+                                this.dispatchEvent(new CustomEvent("propertiesChanged", {
+                                    detail: {
+                                        properties: {
+                                            metadata: metadata
+                                        }
+                                    }
+                                }));
 
-});
+                            }
 
-},500);
+                        };
 
-}
+                        let subscribeReactStore = store => {
 
-handleFile(file){
+                            this._subscription = store.subscribe({
+                                effect: state => {
+                                    parseReactState(state);
+                                    return {result:1};
+                                }
+                            });
 
-let validation=validateFile(file);
+                        };
 
-if(!validation.valid){
-alert(validation.msg);
-return;
-}
+                        let props = outlineContainer.getReactProps();
 
-let info=_shadowRoot.getElementById("fileInfo");
+                        if (props) {
+                            subscribeReactStore(props.store);
+                        }
 
-if(info){
-info.innerHTML=
-"File: "+file.name+
-"<br>Size: "+Math.round(file.size/1024)+" KB";
-}
+                    }
+                }
+            } catch (e) {}
 
-this.readExcel(file);
+        }
 
-}
+        disconnectedCallback() {
+            if (this._subscription) {
+                this._subscription();
+                this._subscription = null;
+            }
+        }
 
-readExcel(file){
+        onCustomWidgetBeforeUpdate(changedProperties) {
+            if ("designMode" in changedProperties) {
+                this._designMode = changedProperties["designMode"];
+            }
+        }
 
-updateProgress(10);
+        onCustomWidgetAfterUpdate(changedProperties) {
 
-let reader=new FileReader();
+            var that = this;
 
-reader.onload=(e)=>{
+            let xlsxjs = "https://sacplanning2025.github.io/hr_widget/xlsxxx.js";
 
-let data=e.target.result;
+            async function LoadLibs() {
 
-updateProgress(30);
+                try {
 
-let workbook=XLSX.read(data,{type:'binary'});
+                    await loadScript(xlsxjs, _shadowRoot);
 
-let rows=[];
+                } catch (e) {
+                    console.log(e);
+                }
 
-workbook.SheetNames.forEach(sheet=>{
-let csv=XLSX.utils.sheet_to_json(workbook.Sheets[sheet],{header:1});
-rows=rows.concat(csv);
-});
+                finally {
 
-updateProgress(60);
+                    loadthis(that, changedProperties);
 
-rows=this.cleanRows(rows);
+                }
 
-uploadStats.totalRows=rows.length;
+            }
 
-let seenIDs=new Set();
-let finalRows=[];
+            LoadLibs();
 
-rows.forEach(r=>{
+        }
 
-if(r.join("").trim()===""){
-uploadStats.emptyRows++;
-return;
-}
+        _renderExportButton() {}
 
-if(seenIDs.has(r[0])){
-uploadStats.duplicateRows++;
-return;
-}
+        _firePropertiesChanged() {
 
-seenIDs.add(r[0]);
-finalRows.push(r);
+            this.unit = "";
 
-});
+            this.dispatchEvent(new CustomEvent("propertiesChanged", {
+                detail: {
+                    properties: {
+                        unit: this.unit
+                    }
+                }
+            }));
 
-uploadStats.validRows=finalRows.length;
+        }
 
-_result=JSON.stringify(finalRows);
+        get title() {
+            return this._export_settings.title;
+        }
 
-updateStats();
+        set title(value) {
+            this._export_settings.title = value;
+        }
 
-updateProgress(100);
+        get unit() {
+            return this._export_settings.unit;
+        }
 
-this.dispatchEvent(new CustomEvent("onUploadSuccess",{
-detail:{
-records:finalRows,
-stats:uploadStats
-}
-}));
+        set unit(value) {
+            value = _result;
+            this._export_settings.unit = value;
+        }
 
-};
+        static get observedAttributes() {
+            return ["title","subtitle","icon","unit","footer","link"];
+        }
 
-reader.readAsBinaryString(file);
+        attributeChangedCallback(name, oldValue, newValue) {
+            if (oldValue != newValue) {
+                this[name] = newValue;
+            }
+        }
 
-}
+    }
 
-cleanRows(rows){
+    customElements.define("com-fd-djaja-sap-sac-excelll", Excel);
 
-let cleaned=[];
 
-rows.forEach(r=>{
-if(r.join("").trim()!=="")
-cleaned.push(r);
-});
+    // ================= ENHANCEMENT UTILITIES =================
 
-return cleaned;
+    function debugLog(msg){
+        if(UploadConfig.DEBUG){
+            console.log("[ExcelWidget]",msg);
+        }
+    }
 
-}
+    function validateFile(file){
 
-}
+        if(file.size > UploadConfig.MAX_FILE_SIZE){
+            sap.m.MessageToast.show("File exceeds 10MB");
+            return false;
+        }
 
-customElements.define("com-fd-djaja-sap-sac-excelll",Excel);
+        var ext = file.name.split(".").pop().toLowerCase();
 
-function validateFile(file){
+        if(!UploadConfig.ALLOWED_TYPES.includes(ext)){
+            sap.m.MessageToast.show("Invalid file type");
+            return false;
+        }
 
-if(!file) return {valid:false,msg:"No file selected"};
+        return true;
 
-if(file.size>CONFIG.MAX_FILE_SIZE)
-return {valid:false,msg:"File too large"};
+    }
 
-let ext=file.name.split(".").pop().toLowerCase();
+    function updateUploadStats(){
 
-if(!CONFIG.ALLOWED_TYPES.includes(ext))
-return {valid:false,msg:"Invalid file type"};
+        console.log("Upload Stats:",UploadStats);
 
-return {valid:true};
+    }
 
-}
+    function updateUploadProgress(percent){
 
-function updateProgress(percent){
+        var bar = document.getElementById("upload-progress-bar");
 
-let bar=_shadowRoot.getElementById("progressBar");
+        if(bar){
+            bar.style.width = percent+"%";
+        }
 
-if(bar)
-bar.style.width=percent+"%";
+    }
 
-}
+    function createGuid() {
 
-function updateStats(){
+        return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, c => {
 
-let stats=_shadowRoot.getElementById("uploadStats");
+            let r = Math.random() * 16 | 0,
+                v = c === "x" ? r : (r & 0x3 | 0x8);
 
-if(stats){
+            return v.toString(16);
 
-stats.innerHTML=
-"Total Rows: "+uploadStats.totalRows+
-"<br>Valid Rows: "+uploadStats.validRows+
-"<br>Duplicate Rows: "+uploadStats.duplicateRows+
-"<br>Empty Rows: "+uploadStats.emptyRows+
-"<br>Time: "+new Date().toLocaleTimeString();
+        });
 
-}
+    }
 
-}
+    function loadScript(src, shadowRoot) {
 
-function createGuid(){
+        return new Promise(function(resolve, reject) {
 
-return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g,function(c){
+            let script = document.createElement('script');
+            script.src = src;
 
-let r=Math.random()*16|0;
-let v=c==="x"?r:(r&0x3|0x8);
+            script.onload = () => {
+                console.log("Load: " + src);
+                resolve(script);
+            }
 
-return v.toString(16);
+            script.onerror = () => reject(new Error(`Script load error for ${src}`));
 
-});
+            shadowRoot.appendChild(script)
 
-}
+        });
 
-function loadScript(src,shadowRoot){
-
-return new Promise(function(resolve,reject){
-
-let script=document.createElement("script");
-script.src=src;
-
-script.onload=()=>{
-console.log("Load: "+src);
-resolve(script);
-};
-
-script.onerror=()=>reject(new Error("Script load error"));
-
-shadowRoot.appendChild(script);
-
-});
-
-}
-
-let xlsxjs = "https://sacplanning2025.github.io/hr_widget/xlsxxx.js";
-
-async function LoadLibs(){
-
-try{
-await loadScript(xlsxjs,_shadowRoot);
-}
-catch(e){
-console.log(e);
-}
-
-}
+    }
 
 })();
