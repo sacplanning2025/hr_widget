@@ -249,36 +249,6 @@
             _shadowRoot.appendChild(div2);
 
             that_.appendChild(div);
-            // ================= DRAG & DROP FEATURE =================
-
-            div.addEventListener("dragover", function(e){
-                e.preventDefault();
-            });
-            
-            div.addEventListener("drop", function(e){
-            
-                e.preventDefault();
-            
-                var file = e.dataTransfer.files[0];
-            
-                if(!file){
-                    sap.m.MessageToast.show("No file detected");
-                    return;
-                }
-            
-                // Assign dropped file to uploader
-                var uploader = document.querySelector("input[type='file']");
-                
-                if(uploader){
-                    uploader.files = e.dataTransfer.files;
-                }
-            
-                sap.m.MessageToast.show("File dropped successfully");
-            
-            });
-            
-            // =======================================================
-            
 
             var mapcanvas_divstr = _shadowRoot.getElementById('oView_' + widgetName);
             var mapcanvas_fragment_divstr = _shadowRoot.getElementById('myXMLFragment_' + widgetName);
@@ -340,144 +310,131 @@
 
                      this_.wasteTime();*/
 
-                       onValidate: function () {
-
+                       onValidate: function (e) {
                         var fU = this.getView().byId("idfileUploader");
                         var file = $("#__xmlview1--idfileUploader-fu")[0].files[0];
                         var this_ = this;
-                        
-                        // FILE SELECT CHECK
-                        if (!file) {
-                            sap.m.MessageToast.show("Please select a file");
+                    
+                        // ⚠️ Check if file is selected
+                        if (typeof file === "undefined") {
+                            sap.m.MessageToast.show("Please select a file before clicking Upload");
                             return;
                         }
-                        
-                        // FILE SIZE VALIDATION
-                        var maxSize = 5 * 1024 * 1024;
-                        if (file.size > maxSize) {
-                            sap.m.MessageToast.show("File must be smaller than 5MB");
-                            return;
-                        }
-                        
-                        // FILE TYPE VALIDATION
-                        var allowedTypes = ["xls","xlsx","xlsm"];
-                        var fileExt = file.name.split(".").pop().toLowerCase();
-                        
-                        if (!allowedTypes.includes(fileExt)) {
-                            sap.m.MessageToast.show("Only Excel files allowed");
-                            return;
-                        }
-                        
+                    
                         this_.wasteTime();
-                        
+                        var oModel = new JSONModel();
+                        oModel.setData({
+                            result_final: null
+                        });
+
                         var reader = new FileReader();
-                        
-                        reader.onprogress = function (event) {
-                        
-                            if (event.lengthComputable) {
-                        
-                                var percent = Math.round((event.loaded / event.total) * 100);
-                        
-                                busyDialog.setText("Uploading " + percent + "%");
-                            }
-                        };
-                        
-                        reader.onload = function (e) {
-                        
-                            var data = e.target.result;
-                        
-                            var workbook = XLSX.read(data,{type:'binary'});
-                        
-                            var result_final = [];
-                            var idSet = new Set();
-                        
-                            workbook.SheetNames.forEach(function(sheetName){
-                        
-                                if(sheetName === "Sheet1"){
-                        
-                                    var json = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName],{header:1});
-                        
-                                    for(var i=1;i<json.length;i++){
-                        
-                                        var rec = json[i];
-                        
-                                        if(!rec || rec.length===0) continue;
-                        
-                                        var id = (rec[0] || "").toString().trim();
-                        
-                                        // DUPLICATE CHECK
-                                        if(idSet.has(id)) continue;
-                        
-                                        idSet.add(id);
-                        
-                                        result_final.push({
-                        
-                                            ID: id,
-                                            DESCRIPTION: (rec[1]||"").toString().trim(),
-                                            H1: (rec[2]||"").toString().trim(),
-                                            Company_Code: (rec[3]||"").toString().trim(),
-                                            Costcenter: (rec[4]||"").toString().trim(),
-                                            Division: (rec[5]||"").toString().trim(),
-                                            Department: (rec[6]||"").toString().trim(),
-                                            Position: (rec[7]||"").toString().trim(),
-                                            ZZ_PAY_GRADE_LVL: (rec[8]||"").toString().trim(),
-                                            Hire_Month: (rec[9]||"").toString().trim(),
-                                            Nationality: (rec[10]||"").toString().trim(),
-                                            Med_Insu_class: (rec[11]||"").toString().trim(),
-                                            No_of_dependents: (rec[12]||"").toString().trim(),
-                                            ACCOM: (rec[13]||"").toString().trim(),
-                                            TRANSPORT: (rec[14]||"").toString().trim(),
-                                            EMP_CLASS: (rec[15]||"").toString().trim(),
-                                            OT: (rec[16]||"").toString().trim()
-                        
-                                        });
-                                    }
-                                }
-                        
+                        reader.onload = async function (e) {
+                            var strCSV = e.target.result;
+
+                            var workbook = XLSX.read(strCSV, {
+                                type: 'binary'
                             });
-                        
-                            if(result_final.length===0){
-                        
-                                sap.m.MessageToast.show("No valid records found");
+
+                            var result_final = [];
+                            var result = [];
+                            var correctsheet = false;
+
+                            workbook.SheetNames.forEach(function (sheetName) {
+                                if (sheetName === "Sheet1") {
+                                    correctsheet = true;
+                                    var csv = XLSX.utils.sheet_to_csv(workbook.Sheets[sheetName]);
+                                    if (csv.length) {
+                                        result.push(csv);
+                                    }
+                                    result = result.join("[$@~!~@$]")
+                                }
+                            });
+
+                            if (correctsheet) {
+                                var lengthfield = result.split("[$@~!~@$]")[0].split("[#@~!~@#]").length;
+                                console.log("lengthfield: " + lengthfield);
+                            
+                                if (lengthfield >= 17) {
+                              result_final = [];
+                                        for (var i = 1; i < result.split("[$@~!~@$]").length; i++) {
+                    
+                                        var rec = result
+                                            .split("[$@~!~@$]")[i]
+                                            .split("[#@~!~@#]");
+                    
+                                        if (
+                                            rec[0] || rec[1] || rec[2] || rec[3] ||
+                                            rec[4] || rec[5] || rec[6] || rec[7] ||
+                                            rec[8] || rec[9] || rec[10] || rec[11] ||
+                                            rec[12] || rec[13] || rec[14] || rec[15] ||
+                                            rec[16]
+                                        ) {
+                                            result_final.push({
+                                                ID: (rec[0] || "").trim(),
+                                                DESCRIPTION: (rec[1] || "").trim(),
+                                                H1: (rec[2] || "").trim(),
+                                                Company_Code: (rec[3] || "").trim(),
+                                                Costcenter: (rec[4] || "").trim(),
+                                                Division: (rec[5] || "").trim(),
+                                                Department: (rec[6] || "").trim(),
+                                                Position: (rec[7] || "").trim(),
+                                                ZZ_PAY_GRADE_LVL: (rec[8] || "").trim(),
+                                                Hire_Month: (rec[9] || "").trim(),
+                                                Nationality: (rec[10] || "").trim(),
+                                                Med_Insu_class: (rec[11] || "").trim(),
+                                                No_of_dependents: (rec[12] || "").trim(),
+                                                ACCOM: (rec[13] || "").trim(),
+                                                TRANSPORT: (rec[14] || "").trim(),
+                                                EMP_CLASS: (rec[15] || "").trim(),
+                                                OT: (rec[16] || "").trim(),
+                                            });
+                                        }
+                                    }
+                    
+                                   
+                                    if (result_final.length === 0) {
+                                        fU.setValue("");
+                                        sap.m.MessageToast.show("There is no record to be uploaded");
+                                        this_.runNext();
+                                        return;
+                                    }
+                    
+                                    if (result_final.length >= 2001) {
+                                        fU.setValue("");
+                                        sap.m.MessageToast.show("Maximum records are 2000.");
+                                        this_.runNext();
+                                        return;
+                                    }
+                    
+                                    oModel = new sap.ui.model.json.JSONModel();
+                                    oModel.setSizeLimit(5000);
+                                    oModel.setData({ result_final: result_final });
+                    
+                                    _result = JSON.stringify(result_final);
+                                    that._firePropertiesChanged();
+                    
+                                    that.dispatchEvent(new CustomEvent("onStart", {
+                                        detail: { settings: {} }
+                                    }));
+                    
+                                    this_.runNext();
+                                    fU.setValue("");
+                    
+                                } else {
+                                    this_.runNext();
+                                    fU.setValue("");
+                                    sap.m.MessageToast.show("Please upload the correct file");
+                                }
+                    
+                            } else {
                                 this_.runNext();
-                                return;
-                        
+                                fU.setValue("");
+                                sap.m.MessageToast.show("Please upload the correct file");
                             }
-                        
-                            if(result_final.length>2000){
-                        
-                                sap.m.MessageToast.show("Maximum records allowed: 2000");
-                                this_.runNext();
-                                return;
-                        
-                            }
-                        
-                            // SAVE DATA FOR SAC SCRIPT
-                            _result = JSON.stringify(result_final);
-                        
-                            that._firePropertiesChanged();
-                        
-                            that.dispatchEvent(new CustomEvent("onStart",{
-                                detail:{settings:{}}
-                            }));
-                        
-                            // STORE HISTORY
-                            localStorage.setItem("lastExcelUpload",new Date());
-                        
-                            // RECORD COUNT
-                            console.log("Uploaded Records:",result_final.length);
-                        
-                            // PREVIEW TABLE
-                            console.table(result_final.slice(0,10));
-                        
-                            this_.runNext();
-                        
-                            fU.setValue("");
-                        
                         };
-                        
-                        reader.readAsBinaryString(file);
-                        
+                    
+                        if (typeof file !== "undefined") {
+                            reader.readAsBinaryString(file);
                         }
                     },
 
