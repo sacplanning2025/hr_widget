@@ -1,0 +1,56 @@
+{
+  "id": "com.company.travelrequestwidget",
+  "version": "1.7.4",
+  "name": "Travel Request Widget",
+  "description": "Editable transactional input widget for SAC",
+    "vendor": "Arnav Choudhary",
+  "newInstancePrefix": "TravelRequestWidget",
+  "webcomponents": [
+    {
+      "kind": "main",
+      "tag": "com-company-travelrequestwidget",
+      "url": "/travelRequestWidget.js",
+      "integrity": "",
+      "ignoreIntegrity": true
+    }
+  ],
+  "properties": {
+    "rows": { "type": "string", "default": "[]" },
+    "lastEvent": { "type": "string", "default": "" },
+    "validationResult": { "type": "string", "default": "true" },
+    "validationErrors": { "type": "string", "default": "[]" },
+    "costCenterOptions": { "type": "string", "default": "[]" },
+    "employeeOptions": { "type": "string", "default": "[]" },
+    "positionOptions": { "type": "string", "default": "[]" },
+    "routeOptions": { "type": "string", "default": "[]" },
+    "initiativeOptions": { "type": "string", "default": "[]" },
+    "purposeOptions": { "type": "string", "default": "[]" },
+    "yesNoOptions": {
+      "type": "string",
+      "default": "[{\"key\":\"1\",\"text\":\"Yes\"},{\"key\":\"0\",\"text\":\"No\"}]"
+    }
+  },
+  "methods": {
+    "getRows": {},
+    "setRows": { "parameters": [{ "name": "rowsJson", "type": "string" }] },
+    "addRow": {},
+    "deleteSelectedRows": {},
+    "clear": {},
+    "validate": {},
+    "setCostCenterOptions": { "parameters": [{ "name": "json", "type": "string" }] },
+    "setEmployeeOptions": { "parameters": [{ "name": "json", "type": "string" }] },
+    "setPositionOptions": { "parameters": [{ "name": "json", "type": "string" }] },
+    "setRouteOptions": { "parameters": [{ "name": "json", "type": "string" }] },
+    "setInitiativeOptions": { "parameters": [{ "name": "json", "type": "string" }] },
+    "setPurposeOptions": { "parameters": [{ "name": "json", "type": "string" }] },
+    "setYesNoOptions": { "parameters": [{ "name": "json", "type": "string" }] },
+    "getValidationErrors": {},
+    "getLastEvent": {}
+  },
+  "events": {
+    "onFieldChange": {},
+    "onDataChange": {},
+    "onValidate": {},
+    "onReady": {}
+  }
+}
