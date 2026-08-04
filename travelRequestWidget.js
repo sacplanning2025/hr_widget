@@ -50,28 +50,61 @@
       this._shadowRoot.innerHTML = `
         <style>
           * { box-sizing: border-box; font-family: Arial, sans-serif; }
-          .toolbar { margin-bottom: 10px; display: flex; gap: 8px; }
+          .toolbar {
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            width: 100%;
+          }
           button {
-            background: #0a6ed1; color: white; border: none; border-radius: 4px;
-            padding: 8px 12px; cursor: pointer;
+            background: #0a6ed1;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 8px 12px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
           }
           button.secondary { background: #6c757d; }
           button.danger { background: #d9534f; }
-          table { width: 100%; border-collapse: collapse; table-layout: fixed; }
-          th, td { border: 1px solid #d9d9d9; padding: 6px; text-align: left; vertical-align: top; }
-          th { background: #eaf3ff; font-size: 12px; }
+          table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+          }
+          th, td {
+            border: 1px solid #d9d9d9;
+            padding: 6px;
+            text-align: left;
+            vertical-align: top;
+          }
+          th {
+            background: #eaf3ff;
+            font-size: 12px;
+          }
           td input, td select {
-            width: 100%; padding: 5px; border: 1px solid #cfcfcf; border-radius: 3px; font-size: 12px;
+            width: 100%;
+            padding: 5px;
+            border: 1px solid #cfcfcf;
+            border-radius: 3px;
+            font-size: 12px;
+            height: 28px;
+          }
+          .wrap {
+            width: 100%;
           }
         </style>
 
-        <div class="toolbar">
-          <button id="btnAdd">Add Row</button>
-          <button id="btnDelete" class="danger">Delete Selected</button>
-          <button id="btnClear" class="secondary">Clear</button>
+        <div class="wrap">
+          <div class="toolbar">
+            <button id="btnAdd">Add Row</button>
+            <button id="btnDelete" class="danger">Delete Selected</button>
+            <button id="btnClear" class="secondary">Clear</button>
+          </div>
+          <div id="tableContainer"></div>
         </div>
-
-        <div id="tableContainer"></div>
       `;
 
       this._shadowRoot.getElementById("btnAdd").addEventListener("click", () => this.addRow());
@@ -124,7 +157,7 @@
       html += `</tbody></table>`;
       container.innerHTML = html;
 
-      Array.from(container.querySelectorAll("input, select")).forEach((el) => {
+      Array.prototype.forEach.call(container.querySelectorAll("input, select"), (el) => {
         el.addEventListener("change", (e) => this._handleFieldChange(e));
       });
     }
@@ -141,7 +174,9 @@
     }
 
     _escape(value) {
-      if (value === undefined || value === null) return "";
+      if (value === undefined || value === null) {
+        return "";
+      }
       return String(value)
         .replace(/&/g, "&amp;")
         .replace(/"/g, "&quot;")
@@ -166,8 +201,7 @@
         type: "fieldChange",
         rowIndex: rowIndex,
         field: field,
-        value: value,
-        rowData: this._rows[rowIndex]
+        value: value
       };
 
       this._lastEvent = JSON.stringify(eventObj);
@@ -217,15 +251,15 @@
       this._rows.forEach((row, i) => {
         const rowIndex = i + 1;
 
-        if (!row.CostCenter) errors.push({ rowIndex: rowIndex, field: "CostCenter", message: "Cost Center is mandatory" });
-        if (!row.Employee) errors.push({ rowIndex: rowIndex, field: "Employee", message: "Employee is mandatory" });
-        if (!row.Position) errors.push({ rowIndex: rowIndex, field: "Position", message: "Position is mandatory" });
-        if (!row.Route) errors.push({ rowIndex: rowIndex, field: "Route", message: "Route is mandatory" });
-        if (!row.ExpectedTiming) errors.push({ rowIndex: rowIndex, field: "ExpectedTiming", message: "Expected Timing is mandatory" });
-        if (!row.TripDays) errors.push({ rowIndex: rowIndex, field: "TripDays", message: "Trip Days is mandatory" });
-        if (row.TripDays && Number(row.TripDays) <= 0) errors.push({ rowIndex: rowIndex, field: "TripDays", message: "Trip Days must be greater than 0" });
-        if (!row.Purpose) errors.push({ rowIndex: rowIndex, field: "Purpose", message: "Purpose is mandatory" });
-        if (!row.Initiative) errors.push({ rowIndex: rowIndex, field: "Initiative", message: "Initiative is mandatory" });
+        if (!row.CostCenter) { errors.push({ rowIndex: rowIndex, field: "CostCenter", message: "Cost Center is mandatory" }); }
+        if (!row.Employee) { errors.push({ rowIndex: rowIndex, field: "Employee", message: "Employee is mandatory" }); }
+        if (!row.Position) { errors.push({ rowIndex: rowIndex, field: "Position", message: "Position is mandatory" }); }
+        if (!row.Route) { errors.push({ rowIndex: rowIndex, field: "Route", message: "Route is mandatory" }); }
+        if (!row.ExpectedTiming) { errors.push({ rowIndex: rowIndex, field: "ExpectedTiming", message: "Expected Timing is mandatory" }); }
+        if (!row.TripDays) { errors.push({ rowIndex: rowIndex, field: "TripDays", message: "Trip Days is mandatory" }); }
+        if (row.TripDays && Number(row.TripDays) <= 0) { errors.push({ rowIndex: rowIndex, field: "TripDays", message: "Trip Days must be greater than 0" }); }
+        if (!row.Purpose) { errors.push({ rowIndex: rowIndex, field: "Purpose", message: "Purpose is mandatory" }); }
+        if (!row.Initiative) { errors.push({ rowIndex: rowIndex, field: "Initiative", message: "Initiative is mandatory" }); }
       });
 
       this._validationErrors = errors;
@@ -247,9 +281,17 @@
       return errors.length === 0 ? "true" : "false";
     }
 
-    getRows() { return JSON.stringify(this._rows); }
-    getValidationErrors() { return JSON.stringify(this._validationErrors || []); }
-    getLastEvent() { return this._lastEvent || ""; }
+    getRows() {
+      return JSON.stringify(this._rows);
+    }
+
+    getValidationErrors() {
+      return JSON.stringify(this._validationErrors || []);
+    }
+
+    getLastEvent() {
+      return this._lastEvent || "";
+    }
 
     setRows(rowsJson) {
       try {
@@ -292,5 +334,7 @@
     }
   }
 
-  customElements.define("com-company-travelrequestwidget", TravelRequestWidget);
+  if (!customElements.get("com-company-travelrequestwidget")) {
+    customElements.define("com-company-travelrequestwidget", TravelRequestWidget);
+  }
 })();
