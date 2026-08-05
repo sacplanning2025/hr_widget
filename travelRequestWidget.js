@@ -47,7 +47,7 @@
         "costCenterOptions",
         "employeeOptions",
         "routeOptions",
-        "initiativeOptions", 
+        "initiativeOptions",
         "yesNoOptions"
       ];
     }
@@ -55,6 +55,40 @@
     attributeChangedCallback(name, oldValue, newValue) {
       if (oldValue === newValue) {
         return;
+      }
+
+      if (name === "rows") {
+        this.setRows(newValue || "[]");
+        return;
+      }
+
+      if (name === "costCenterOptions") {
+        this._costCenterOptions = this._parseOptions(newValue);
+        this._refreshTable();
+        return;
+      }
+
+      if (name === "employeeOptions") {
+        this._employeeOptions = this._parseOptions(newValue);
+        this._refreshTable();
+        return;
+      }
+
+      if (name === "routeOptions") {
+        this._routeOptions = this._parseOptions(newValue);
+        this._refreshTable();
+        return;
+      }
+
+      if (name === "initiativeOptions") {
+        this._initiativeOptions = this._parseOptions(newValue);
+        this._refreshTable();
+        return;
+      }
+
+      if (name === "yesNoOptions") {
+        this._yesNoOptions = this._parseOptions(newValue);
+        this._refreshTable();
       }
     }
 
@@ -66,7 +100,6 @@
         rowStatus: "NEW",
         saveStatus: "",
         saveMessage: "",
-
         CostCenter: "",
         Employee: "",
         Route: "",
@@ -76,7 +109,6 @@
         Accommodation: "",
         AirTicket: "",
         Others: "",
-
         CombinationKey: "",
         AuditUser: "",
         AuditTimestamp: ""
@@ -88,11 +120,11 @@
         row.rowId = "ROW_" + String(this._rowSequence++);
       }
 
-      if (row.selected === undefined) {
+      if (row.selected !== true) {
         row.selected = false;
       }
 
-      if (row.isModified === undefined) {
+      if (row.isModified !== true) {
         row.isModified = false;
       }
 
@@ -117,7 +149,6 @@
       row.Accommodation = this._safeString(row.Accommodation);
       row.AirTicket = this._safeString(row.AirTicket);
       row.Others = this._safeString(row.Others);
-
       row.CombinationKey = this._buildCombinationKey(row);
       row.AuditUser = this._safeString(row.AuditUser);
       row.AuditTimestamp = this._safeString(row.AuditTimestamp);
@@ -144,7 +175,6 @@
       return {
         rowId: row.rowId,
         combinationKey: this._buildCombinationKey(row),
-
         dimensions: {
           AHC_COSTCENTER: this._safeString(row.CostCenter),
           AHC_EMPLOYEE: this._safeString(row.Employee),
@@ -152,15 +182,12 @@
           Date: this._safeString(row.ExpectedTiming),
           AHC_SBI: this._safeString(row.Initiative)
         },
-
         transactions: {
           NO_OF_DAYS: this._safeString(row.TripDays),
           ACCOMODATION: this._safeString(row.Accommodation),
           AIRTICKET: this._safeString(row.AirTicket),
           OTHERS: this._safeString(row.Others)
         },
-
-
         status: {
           rowStatus: this._safeString(row.rowStatus),
           saveStatus: this._safeString(row.saveStatus),
@@ -294,8 +321,8 @@
     }
 
     _refreshTable() {
-      const container = this._shadowRoot.getElementById("tableContainer");
-      let html = `
+      var container = this._shadowRoot.getElementById("tableContainer");
+      var html = `
         <table>
           <thead>
             <tr>
@@ -315,31 +342,39 @@
           <tbody>
       `;
 
-      this._rows.forEach((row, index) => {
-        const rowHasError = this._hasRowError(index + 1);
-        const rowClass = rowHasError ? "row-error" : (row.isModified ? "row-modified" : "");
+      var i = 0;
+      for (i = 0; i < this._rows.length; i++) {
+        var row = this._rows[i];
+        var rowHasError = this._hasRowError(i + 1);
+        var rowClass = "";
+        if (rowHasError) {
+          rowClass = "row-error";
+        } else if (row.isModified === true) {
+          rowClass = "row-modified";
+        }
 
         html += `
           <tr class="${rowClass}">
-            <td><input type="checkbox" data-row="${index}" data-field="selected" ${row.selected ? "checked" : ""}></td>
-            <td>${this._buildSelect(index, "CostCenter", this._costCenterOptions, row.CostCenter)}</td>
-            <td>${this._buildSelect(index, "Employee", this._employeeOptions, row.Employee)}</td>
-            <td>${this._buildSelect(index, "Route", this._routeOptions, row.Route)}</td>
-            <td><input type="text" data-row="${index}" data-field="ExpectedTiming" value="${this._escape(row.ExpectedTiming)}" placeholder="YYYYMM"></td>
-            <td><input type="number" data-row="${index}" data-field="TripDays" value="${this._escape(row.TripDays)}"></td>
-            <td>${this._buildSelect(index, "Initiative", this._initiativeOptions, row.Initiative)}</td>
-            <td>${this._buildSelect(index, "Accommodation", this._yesNoOptions, row.Accommodation)}</td>
-            <td>${this._buildSelect(index, "AirTicket", this._yesNoOptions, row.AirTicket)}</td>
-            <td>${this._buildSelect(index, "Others", this._yesNoOptions, row.Others)}</td>
+            <td><input type="checkbox" data-row="${i}" data-field="selected" ${row.selected ? "checked" : ""}></td>
+            <td>${this._buildSelect(i, "CostCenter", this._costCenterOptions, row.CostCenter)}</td>
+            <td>${this._buildSelect(i, "Employee", this._employeeOptions, row.Employee)}</td>
+            <td>${this._buildSelect(i, "Route", this._routeOptions, row.Route)}</td>
+            <td><input type="text" data-row="${i}" data-field="ExpectedTiming" value="${this._escape(row.ExpectedTiming)}" placeholder="YYYYMM"></td>
+            <td><input type="number" data-row="${i}" data-field="TripDays" value="${this._escape(row.TripDays)}"></td>
+            <td>${this._buildSelect(i, "Initiative", this._initiativeOptions, row.Initiative)}</td>
+            <td>${this._buildSelect(i, "Accommodation", this._yesNoOptions, row.Accommodation)}</td>
+            <td>${this._buildSelect(i, "AirTicket", this._yesNoOptions, row.AirTicket)}</td>
+            <td>${this._buildSelect(i, "Others", this._yesNoOptions, row.Others)}</td>
             <td>${this._renderSaveStatus(row)}</td>
           </tr>
         `;
-      });
+      }
 
       html += `</tbody></table>`;
       container.innerHTML = html;
 
-      Array.prototype.forEach.call(container.querySelectorAll("input, select"), (el) => {
+      var elements = container.querySelectorAll("input, select");
+      Array.prototype.forEach.call(elements, (el) => {
         el.addEventListener("change", (e) => this._handleFieldChange(e));
       });
 
@@ -357,12 +392,19 @@
     }
 
     _buildSelect(rowIndex, fieldName, options, selectedValue) {
-      let html = `<select data-row="${rowIndex}" data-field="${fieldName}">`;
+      var html = `<select data-row="${rowIndex}" data-field="${fieldName}">`;
       html += `<option value=""></option>`;
-      options.forEach((opt) => {
-        const selected = String(opt.key) === String(selectedValue) ? "selected" : "";
+
+      var i = 0;
+      for (i = 0; i < options.length; i++) {
+        var opt = options[i];
+        var selected = "";
+        if (String(opt.key) === String(selectedValue)) {
+          selected = "selected";
+        }
         html += `<option value="${this._escape(opt.key)}" ${selected}>${this._escape(opt.text)}</option>`;
-      });
+      }
+
       html += `</select>`;
       return html;
     }
@@ -386,9 +428,9 @@
     }
 
     _handleFieldChange(e) {
-      const rowIndex = Number(e.target.getAttribute("data-row"));
-      const field = e.target.getAttribute("data-field");
-      let value = "";
+      var rowIndex = Number(e.target.getAttribute("data-row"));
+      var field = e.target.getAttribute("data-field");
+      var value = "";
 
       if (field === "selected") {
         value = e.target.checked;
@@ -403,7 +445,7 @@
       this._rows[rowIndex].saveMessage = "";
       this._rows[rowIndex].CombinationKey = this._buildCombinationKey(this._rows[rowIndex]);
 
-      const eventObj = {
+      var eventObj = {
         type: "fieldChange",
         rowIndex: rowIndex,
         field: field,
@@ -416,7 +458,6 @@
       this._validationResult = "true";
 
       this._syncRows();
-
       this._fireSimpleEvent("onFieldChange", eventObj);
       this._fireSimpleEvent("onDataChange", { rows: this._rows });
       this._refreshTable();
@@ -455,10 +496,14 @@
     }
 
     deleteSelectedRows() {
-      this._rows = this._rows.filter((r) => !r.selected);
+      this._rows = this._rows.filter(function (r) {
+        return r.selected !== true;
+      });
+
       if (this._rows.length === 0) {
         this._rows.push(this._createEmptyRow());
       }
+
       this._normalizeAllRows();
       this._widgetStatus = "CHANGED";
       this._syncRows();
@@ -494,36 +539,55 @@
     }
 
     validate() {
-      const errors = [];
-      const combinationMap = {};
-      let i = 0;
+      var errors = [];
+      var combinationMap = {};
+      var i = 0;
 
       for (i = 0; i < this._rows.length; i++) {
-        const row = this._rows[i];
-        const rowIndex = i + 1;
+        var row = this._rows[i];
+        var rowIndex = i + 1;
 
-        if (!row.CostCenter) { errors.push({ rowIndex: rowIndex, field: "CostCenter", message: "Cost Center is mandatory" }); }
-        if (!row.Employee) { errors.push({ rowIndex: rowIndex, field: "Employee", message: "Employee is mandatory" }); }
-        if (!row.Route) { errors.push({ rowIndex: rowIndex, field: "Route", message: "Route is mandatory" }); }
-        if (!row.ExpectedTiming) { errors.push({ rowIndex: rowIndex, field: "ExpectedTiming", message: "Expected Timing is mandatory" }); }
+        if (!row.CostCenter) {
+          errors.push({ rowIndex: rowIndex, field: "CostCenter", message: "Cost Center is mandatory" });
+        }
+        if (!row.Employee) {
+          errors.push({ rowIndex: rowIndex, field: "Employee", message: "Employee is mandatory" });
+        }
+        if (!row.Route) {
+          errors.push({ rowIndex: rowIndex, field: "Route", message: "Route is mandatory" });
+        }
+        if (!row.ExpectedTiming) {
+          errors.push({ rowIndex: rowIndex, field: "ExpectedTiming", message: "Expected Timing is mandatory" });
+        }
         if (row.ExpectedTiming && !this._isValidExpectedTiming(row.ExpectedTiming)) {
           errors.push({ rowIndex: rowIndex, field: "ExpectedTiming", message: "Expected Timing must be in YYYYMM format" });
         }
-        if (!row.TripDays) { errors.push({ rowIndex: rowIndex, field: "TripDays", message: "Trip Days is mandatory" }); }
+        if (!row.TripDays) {
+          errors.push({ rowIndex: rowIndex, field: "TripDays", message: "Trip Days is mandatory" });
+        }
         if (row.TripDays && Number(row.TripDays) <= 0) {
           errors.push({ rowIndex: rowIndex, field: "TripDays", message: "Trip Days must be greater than 0" });
         }
-      
-        if (!row.Initiative) { errors.push({ rowIndex: rowIndex, field: "Initiative", message: "Initiative is mandatory" }); }
-        if (!row.Accommodation) { errors.push({ rowIndex: rowIndex, field: "Accommodation", message: "Accommodation is mandatory" }); }
-        if (!row.AirTicket) { errors.push({ rowIndex: rowIndex, field: "AirTicket", message: "Air Ticket is mandatory" }); }
-        if (!row.Others) { errors.push({ rowIndex: rowIndex, field: "Others", message: "Others is mandatory" }); }
+        if (!row.Initiative) {
+          errors.push({ rowIndex: rowIndex, field: "Initiative", message: "Initiative is mandatory" });
+        }
+        if (!row.Accommodation) {
+          errors.push({ rowIndex: rowIndex, field: "Accommodation", message: "Accommodation is mandatory" });
+        }
+        if (!row.AirTicket) {
+          errors.push({ rowIndex: rowIndex, field: "AirTicket", message: "Air Ticket is mandatory" });
+        }
+        if (!row.Others) {
+          errors.push({ rowIndex: rowIndex, field: "Others", message: "Others is mandatory" });
+        }
 
-        const combinationKey = this._buildCombinationKey(row);
-        if (combinationMap[combinationKey]) {
-          errors.push({ rowIndex: rowIndex, field: "CombinationKey", message: "Duplicate dimension combination found" });
-        } else {
-          combinationMap[combinationKey] = true;
+        var combinationKey = this._buildCombinationKey(row);
+        if (combinationKey !== "") {
+          if (combinationMap[combinationKey]) {
+            errors.push({ rowIndex: rowIndex, field: "CombinationKey", message: "Duplicate dimension combination found" });
+          } else {
+            combinationMap[combinationKey] = true;
+          }
         }
       }
 
@@ -537,7 +601,6 @@
       this._widgetStatus = errors.length === 0 ? "VALID" : "ERROR";
 
       this._firePropertiesChanged();
-
       this._fireSimpleEvent("onValidate", {
         validationResult: this._validationResult,
         validationErrors: errors
@@ -556,10 +619,12 @@
         return "[]";
       }
 
-      const payload = [];
-      let i = 0;
+      var payload = [];
+      var i = 0;
       for (i = 0; i < this._rows.length; i++) {
-        payload.push(this._buildTransactionPayloadRow(this._rows[i]));
+        if (this._rows[i].selected === true) {
+          payload.push(this._buildTransactionPayloadRow(this._rows[i]));
+        }
       }
 
       this._savePayload = payload;
@@ -585,8 +650,8 @@
     }
 
     getSelectedRowCount() {
-      let count = 0;
-      let i = 0;
+      var count = 0;
+      var i = 0;
       for (i = 0; i < this._rows.length; i++) {
         if (this._rows[i].selected === true) {
           count++;
@@ -599,16 +664,22 @@
       if (rowIndex < 0 || rowIndex >= this._rows.length) {
         return "";
       }
-      const row = this._rows[rowIndex];
-      if (!row || row[fieldName] === undefined || row[fieldName] === null) {
+
+      var row = this._rows[rowIndex];
+      if (!row) {
         return "";
       }
+
+      if (row[fieldName] === undefined || row[fieldName] === null) {
+        return "";
+      }
+
       return String(row[fieldName]);
     }
 
     getSelectedRowValue(selectedIndex, fieldName) {
-      const selectedRows = [];
-      let i = 0;
+      var selectedRows = [];
+      var i = 0;
 
       for (i = 0; i < this._rows.length; i++) {
         if (this._rows[i].selected === true) {
@@ -620,10 +691,15 @@
         return "";
       }
 
-      const row = selectedRows[selectedIndex];
-      if (!row || row[fieldName] === undefined || row[fieldName] === null) {
+      var row = selectedRows[selectedIndex];
+      if (!row) {
         return "";
       }
+
+      if (row[fieldName] === undefined || row[fieldName] === null) {
+        return "";
+      }
+
       return String(row[fieldName]);
     }
 
@@ -682,7 +758,7 @@
 
     _parseOptions(json) {
       try {
-        const arr = JSON.parse(json || "[]");
+        var arr = JSON.parse(json || "[]");
         return Array.isArray(arr) ? arr : [];
       } catch (e) {
         return [];
