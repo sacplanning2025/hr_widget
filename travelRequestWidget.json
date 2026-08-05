@@ -1,9 +1,9 @@
 {
   "id": "com.company.travelrequestwidget",
-  "version": "1.7.4",
+  "version": "2.0.0",
   "name": "Travel Request Widget",
-  "description": "Editable transactional input widget for SAC",
-    "vendor": "Arnav Choudhary",
+  "description": "Editable enterprise transactional input widget for SAC",
+  "vendor": "Arnav Choudhary",
   "newInstancePrefix": "TravelRequestWidget",
   "webcomponents": [
     {
@@ -19,6 +19,11 @@
     "lastEvent": { "type": "string", "default": "" },
     "validationResult": { "type": "string", "default": "true" },
     "validationErrors": { "type": "string", "default": "[]" },
+    "savePayload": { "type": "string", "default": "[]" },
+    "rowCount": { "type": "integer", "default": 0 },
+    "selectedRowCount": { "type": "integer", "default": 0 },
+    "widgetStatus": { "type": "string", "default": "READY" },
+
     "costCenterOptions": { "type": "string", "default": "[]" },
     "employeeOptions": { "type": "string", "default": "[]" },
     "positionOptions": { "type": "string", "default": "[]" },
@@ -31,12 +36,36 @@
     }
   },
   "methods": {
-    "getRows": {},
+    "getRows": { "returnType": "string" },
     "setRows": { "parameters": [{ "name": "rowsJson", "type": "string" }] },
+
+    "getRowCount": { "returnType": "integer" },
+    "getSelectedRowCount": { "returnType": "integer" },
+    "getRowValue": {
+      "parameters": [
+        { "name": "rowIndex", "type": "integer" },
+        { "name": "fieldName", "type": "string" }
+      ],
+      "returnType": "string"
+    },
+    "getSelectedRowValue": {
+      "parameters": [
+        { "name": "selectedIndex", "type": "integer" },
+        { "name": "fieldName", "type": "string" }
+      ],
+      "returnType": "string"
+    },
+
     "addRow": {},
     "deleteSelectedRows": {},
     "clear": {},
-    "validate": {},
+    "validate": { "returnType": "string" },
+    "getValidationErrors": { "returnType": "string" },
+    "getValidationResult": { "returnType": "string" },
+
+    "prepareSavePayload": { "returnType": "string" },
+    "getSavePayload": { "returnType": "string" },
+
     "setCostCenterOptions": { "parameters": [{ "name": "json", "type": "string" }] },
     "setEmployeeOptions": { "parameters": [{ "name": "json", "type": "string" }] },
     "setPositionOptions": { "parameters": [{ "name": "json", "type": "string" }] },
@@ -44,8 +73,8 @@
     "setInitiativeOptions": { "parameters": [{ "name": "json", "type": "string" }] },
     "setPurposeOptions": { "parameters": [{ "name": "json", "type": "string" }] },
     "setYesNoOptions": { "parameters": [{ "name": "json", "type": "string" }] },
-    "getValidationErrors": {},
-    "getLastEvent": {}
+
+    "getLastEvent": { "returnType": "string" }
   },
   "events": {
     "onFieldChange": {},
