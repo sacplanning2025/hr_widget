@@ -14,10 +14,8 @@
 
       this._costCenterOptions = [];
       this._employeeOptions = [];
-      this._positionOptions = [];
       this._routeOptions = [];
       this._initiativeOptions = [];
-      this._purposeOptions = [];
       this._yesNoOptions = [
         { key: "1", text: "Yes" },
         { key: "0", text: "No" }
@@ -48,10 +46,8 @@
         "widgetStatus",
         "costCenterOptions",
         "employeeOptions",
-        "positionOptions",
         "routeOptions",
-        "initiativeOptions",
-        "purposeOptions",
+        "initiativeOptions", 
         "yesNoOptions"
       ];
     }
@@ -73,11 +69,9 @@
 
         CostCenter: "",
         Employee: "",
-        Position: "",
         Route: "",
         ExpectedTiming: "",
         TripDays: "",
-        Purpose: "",
         Initiative: "",
         Accommodation: "",
         AirTicket: "",
@@ -116,11 +110,9 @@
 
       row.CostCenter = this._safeString(row.CostCenter);
       row.Employee = this._safeString(row.Employee);
-      row.Position = this._safeString(row.Position);
       row.Route = this._safeString(row.Route);
       row.ExpectedTiming = this._safeString(row.ExpectedTiming);
       row.TripDays = this._safeString(row.TripDays);
-      row.Purpose = this._safeString(row.Purpose);
       row.Initiative = this._safeString(row.Initiative);
       row.Accommodation = this._safeString(row.Accommodation);
       row.AirTicket = this._safeString(row.AirTicket);
@@ -142,10 +134,8 @@
       return [
         this._safeString(row.CostCenter),
         this._safeString(row.Employee),
-        this._safeString(row.Position),
         this._safeString(row.Route),
         this._safeString(row.ExpectedTiming),
-        this._safeString(row.Purpose),
         this._safeString(row.Initiative)
       ].join("|");
     }
@@ -158,10 +148,8 @@
         dimensions: {
           AHC_COSTCENTER: this._safeString(row.CostCenter),
           AHC_EMPLOYEE: this._safeString(row.Employee),
-          AHC_POSITION: this._safeString(row.Position),
           AHC_ROUTE: this._safeString(row.Route),
           Date: this._safeString(row.ExpectedTiming),
-          AHC_AUDIT: this._safeString(row.Purpose),
           AHC_SBI: this._safeString(row.Initiative)
         },
 
@@ -172,9 +160,6 @@
           OTHERS: this._safeString(row.Others)
         },
 
-        display: {
-          Purpose: this._safeString(row.Purpose)
-        },
 
         status: {
           rowStatus: this._safeString(row.rowStatus),
@@ -317,11 +302,9 @@
               <th style="width:40px">Sel</th>
               <th>Cost Center</th>
               <th>Employee</th>
-              <th>Position</th>
               <th>Route</th>
               <th>Expected Timing</th>
               <th>Duration of Trip in Days</th>
-              <th>Purpose</th>
               <th>Initiative</th>
               <th>Accommodation</th>
               <th>Air Ticket</th>
@@ -341,11 +324,9 @@
             <td><input type="checkbox" data-row="${index}" data-field="selected" ${row.selected ? "checked" : ""}></td>
             <td>${this._buildSelect(index, "CostCenter", this._costCenterOptions, row.CostCenter)}</td>
             <td>${this._buildSelect(index, "Employee", this._employeeOptions, row.Employee)}</td>
-            <td>${this._buildSelect(index, "Position", this._positionOptions, row.Position)}</td>
             <td>${this._buildSelect(index, "Route", this._routeOptions, row.Route)}</td>
             <td><input type="text" data-row="${index}" data-field="ExpectedTiming" value="${this._escape(row.ExpectedTiming)}" placeholder="YYYYMM"></td>
             <td><input type="number" data-row="${index}" data-field="TripDays" value="${this._escape(row.TripDays)}"></td>
-            <td>${this._buildSelect(index, "Purpose", this._purposeOptions, row.Purpose)}</td>
             <td>${this._buildSelect(index, "Initiative", this._initiativeOptions, row.Initiative)}</td>
             <td>${this._buildSelect(index, "Accommodation", this._yesNoOptions, row.Accommodation)}</td>
             <td>${this._buildSelect(index, "AirTicket", this._yesNoOptions, row.AirTicket)}</td>
@@ -523,7 +504,6 @@
 
         if (!row.CostCenter) { errors.push({ rowIndex: rowIndex, field: "CostCenter", message: "Cost Center is mandatory" }); }
         if (!row.Employee) { errors.push({ rowIndex: rowIndex, field: "Employee", message: "Employee is mandatory" }); }
-        if (!row.Position) { errors.push({ rowIndex: rowIndex, field: "Position", message: "Position is mandatory" }); }
         if (!row.Route) { errors.push({ rowIndex: rowIndex, field: "Route", message: "Route is mandatory" }); }
         if (!row.ExpectedTiming) { errors.push({ rowIndex: rowIndex, field: "ExpectedTiming", message: "Expected Timing is mandatory" }); }
         if (row.ExpectedTiming && !this._isValidExpectedTiming(row.ExpectedTiming)) {
@@ -533,7 +513,7 @@
         if (row.TripDays && Number(row.TripDays) <= 0) {
           errors.push({ rowIndex: rowIndex, field: "TripDays", message: "Trip Days must be greater than 0" });
         }
-        if (!row.Purpose) { errors.push({ rowIndex: rowIndex, field: "Purpose", message: "Purpose is mandatory" }); }
+      
         if (!row.Initiative) { errors.push({ rowIndex: rowIndex, field: "Initiative", message: "Initiative is mandatory" }); }
         if (!row.Accommodation) { errors.push({ rowIndex: rowIndex, field: "Accommodation", message: "Accommodation is mandatory" }); }
         if (!row.AirTicket) { errors.push({ rowIndex: rowIndex, field: "AirTicket", message: "Air Ticket is mandatory" }); }
@@ -685,11 +665,6 @@
       this._refreshTable();
     }
 
-    setPositionOptions(json) {
-      this._positionOptions = this._parseOptions(json);
-      this._refreshTable();
-    }
-
     setRouteOptions(json) {
       this._routeOptions = this._parseOptions(json);
       this._refreshTable();
@@ -697,11 +672,6 @@
 
     setInitiativeOptions(json) {
       this._initiativeOptions = this._parseOptions(json);
-      this._refreshTable();
-    }
-
-    setPurposeOptions(json) {
-      this._purposeOptions = this._parseOptions(json);
       this._refreshTable();
     }
 
