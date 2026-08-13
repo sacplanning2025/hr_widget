@@ -1,15 +1,16 @@
 {
-  "id": "com.company.travelrequestwidget",
-  "version": "2.0.0",
-  "name": "Travel Request Widget",
-  "description": "Editable enterprise transactional input widget for SAC",
+  "id": "com.company.projectentrywidget",
+  "version": "1.7.7",
+  "name": "Project Entry Widget",
+  "description": "Project entry table widget for SAC",
   "vendor": "Arnav Choudhary",
-  "newInstancePrefix": "TravelRequestWidget",
+  "newInstancePrefix": "ProjectEntryWidget",
+  "icon": "sap-icon://table-view",
   "webcomponents": [
     {
       "kind": "main",
-      "tag": "com-company-travelrequestwidget",
-      "url": "https://sacplanning2025.github.io/hr_widget/travelRequestWidget.js",
+      "tag": "com-company-projectentrywidget",
+      "url": "https://sacplanning2025.github.io/hr_widget/projectEntryWidget.js",
       "integrity": "",
       "ignoreIntegrity": true
     }
@@ -24,23 +25,20 @@
     "selectedRowCount": { "type": "integer", "default": 0 },
     "widgetStatus": { "type": "string", "default": "READY" },
 
-    "costCenterOptions": { "type": "string", "default": "[]" },
-    "employeeOptions": { "type": "string", "default": "[]" },
-    "positionOptions": { "type": "string", "default": "[]" },
-    "routeOptions": { "type": "string", "default": "[]" },
-    "initiativeOptions": { "type": "string", "default": "[]" },
-    "purposeOptions": { "type": "string", "default": "[]" },
-    "yesNoOptions": {
-      "type": "string",
-      "default": "[{\"key\":\"1\",\"text\":\"Yes\"},{\"key\":\"0\",\"text\":\"No\"}]"
-    }
+    "companyCodeOptions": { "type": "string", "default": "[]" },
+    "customerOptions": { "type": "string", "default": "[]" }
   },
   "methods": {
     "getRows": { "returnType": "string" },
-    "setRows": { "parameters": [{ "name": "rowsJson", "type": "string" }] },
+    "setRows": {
+      "parameters": [
+        { "name": "rowsJson", "type": "string" }
+      ]
+    },
 
     "getRowCount": { "returnType": "integer" },
     "getSelectedRowCount": { "returnType": "integer" },
+
     "getRowValue": {
       "parameters": [
         { "name": "rowIndex", "type": "integer" },
@@ -57,22 +55,27 @@
     },
 
     "addRow": {},
+    "copySelectedRows": {},
     "deleteSelectedRows": {},
     "clear": {},
     "validate": { "returnType": "string" },
+
     "getValidationErrors": { "returnType": "string" },
     "getValidationResult": { "returnType": "string" },
 
     "prepareSavePayload": { "returnType": "string" },
     "getSavePayload": { "returnType": "string" },
 
-    "setCostCenterOptions": { "parameters": [{ "name": "json", "type": "string" }] },
-    "setEmployeeOptions": { "parameters": [{ "name": "json", "type": "string" }] },
-    "setPositionOptions": { "parameters": [{ "name": "json", "type": "string" }] },
-    "setRouteOptions": { "parameters": [{ "name": "json", "type": "string" }] },
-    "setInitiativeOptions": { "parameters": [{ "name": "json", "type": "string" }] },
-    "setPurposeOptions": { "parameters": [{ "name": "json", "type": "string" }] },
-    "setYesNoOptions": { "parameters": [{ "name": "json", "type": "string" }] },
+    "setCompanyCodeOptions": {
+      "parameters": [
+        { "name": "json", "type": "string" }
+      ]
+    },
+    "setCustomerOptions": {
+      "parameters": [
+        { "name": "json", "type": "string" }
+      ]
+    },
 
     "getLastEvent": { "returnType": "string" }
   },
