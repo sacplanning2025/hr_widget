@@ -1,6 +1,6 @@
 {
   "id": "com.company.projectentrywidget",
-  "version": "1.7.8",
+  "version": "1.9.1",
   "name": "Project Entry Widget",
   "description": "Project entry table widget for SAC",
   "vendor": "Arnav Choudhary",
@@ -24,7 +24,6 @@
     "rowCount": { "type": "integer", "default": 0 },
     "selectedRowCount": { "type": "integer", "default": 0 },
     "widgetStatus": { "type": "string", "default": "READY" },
-
     "companyCodeOptions": { "type": "string", "default": "[]" },
     "customerOptions": { "type": "string", "default": "[]" }
   },
@@ -35,10 +34,8 @@
         { "name": "rowsJson", "type": "string" }
       ]
     },
-
     "getRowCount": { "returnType": "integer" },
     "getSelectedRowCount": { "returnType": "integer" },
-
     "getRowValue": {
       "parameters": [
         { "name": "rowIndex", "type": "integer" },
@@ -53,19 +50,14 @@
       ],
       "returnType": "string"
     },
-
     "addRow": {},
     "copySelectedRows": {},
     "deleteSelectedRows": {},
     "clear": {},
     "validate": { "returnType": "string" },
-
+    "save": {},
     "getValidationErrors": { "returnType": "string" },
     "getValidationResult": { "returnType": "string" },
-
-    "prepareSavePayload": { "returnType": "string" },
-    "getSavePayload": { "returnType": "string" },
-
     "setCompanyCodeOptions": {
       "parameters": [
         { "name": "json", "type": "string" }
@@ -76,7 +68,6 @@
         { "name": "json", "type": "string" }
       ]
     },
-
     "getLastEvent": { "returnType": "string" }
   },
   "events": {
