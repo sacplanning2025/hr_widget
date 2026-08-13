@@ -173,33 +173,8 @@
             color:#223548;
             outline:none;
           }
-          .cell.error, .dropdown-trigger.error { border-color:#e25555; background:#fff5f5; }
           .rowErr { margin-top:4px; font-size:11px; color:#c53030; white-space:normal; max-width:220px; line-height:1.3; }
           .summary { padding:10px 12px; border-top:1px solid #e5edf7; display:flex; gap:18px; font-size:12px; background:#fafcff; flex-wrap:wrap; }
-          .dropdown-trigger {
-            width:100%;
-            min-height:34px;
-            height:34px;
-            border:1px solid #c9d6e5;
-            border-radius:6px;
-            background:#fff;
-            display:flex;
-            align-items:center;
-            justify-content:space-between;
-            box-sizing:border-box;
-            padding:0 10px;
-            cursor:pointer;
-            font-size:13px;
-            color:#223548;
-            user-select:none;
-          }
-          .dropdown-trigger .label {
-            overflow:hidden;
-            text-overflow:ellipsis;
-            white-space:nowrap;
-            padding-right:8px;
-          }
-          .dropdown-trigger .arrow { color:#6a7f94; font-size:11px; flex:0 0 auto; }
           .row-checkbox { width:22px; height:22px; cursor:pointer; margin-top:6px; }
           .select-all-wrap { display:flex; align-items:center; gap:6px; }
           .select-all-checkbox { width:16px; height:16px; cursor:pointer; }
@@ -271,11 +246,11 @@
       }
 
       html += '<button class="btn" id="btnValidate">Validate</button>';
-      html += '<button class="btn primary" id="btnPrepare">Prepare Payload</button>';
+      html += '<button class="btn primary" id="btnSave">Save</button>';
       html += '<button class="btn" id="btnClear">Clear</button>';
       html += '</div>';
 
-      html += '<div class="gridWrap" id="gridWrap">';
+      html += '<div class="gridWrap">';
       html += '<table>';
       html += '<thead><tr>';
       html += '<th style="width:70px"><div class="select-all-wrap"><span>Sel</span><input class="select-all-checkbox" type="checkbox" id="selectAll" ' + (allSelected ? 'checked' : '') + ' /></div></th>';
@@ -315,7 +290,6 @@
       html += this._refreshStatusBarHtml();
 
       container.innerHTML = html;
-
       this._bindEvents();
     }
 
@@ -324,11 +298,8 @@
     }
 
     _renderInputCell(rowIndex, fieldName, value, inputType, rowErrors) {
-      var hasError = this._hasFieldError(fieldName, rowErrors);
-      var errorCss = hasError ? "error" : "";
-
       return ''
-        + '<input class="cell ' + errorCss + '"'
+        + '<input class="cell"'
         + ' data-row="' + rowIndex + '"'
         + ' data-field="' + fieldName + '"'
         + ' data-type="input"'
@@ -338,16 +309,8 @@
     }
 
     _renderSelectCell(rowIndex, fieldName, value, options, rowErrors) {
-      var hasError = this._hasFieldError(fieldName, rowErrors);
-      var errorCss = hasError ? "error" : "";
-      var displayText = this._getOptionText(options, value);
-
-      if (!displayText) {
-        displayText = "Select";
-      }
-
       var html = '';
-      html += '<select class="cell ' + errorCss + '" data-row="' + rowIndex + '" data-field="' + fieldName + '" data-type="select">';
+      html += '<select class="cell" data-row="' + rowIndex + '" data-field="' + fieldName + '" data-type="select">';
       html += '<option value="">Select</option>';
 
       for (var i = 0; i < options.length; i++) {
@@ -359,15 +322,6 @@
       html += '</select>';
       html += this._renderFieldErrors(fieldName, rowErrors);
       return html;
-    }
-
-    _getOptionText(options, value) {
-      for (var i = 0; i < options.length; i++) {
-        if (String(options[i].key) === String(value)) {
-          return options[i].text !== undefined ? options[i].text : options[i].key;
-        }
-      }
-      return "";
     }
 
     _renderFieldErrors(fieldName, rowErrors) {
@@ -387,10 +341,6 @@
       return '<div class="rowErr">' + messages.join("<br>") + '</div>';
     }
 
-    _hasFieldError(fieldName, rowErrors) {
-      return this._renderFieldErrors(fieldName, rowErrors) !== "";
-    }
-
     _getRowErrorMap() {
       var map = {};
       for (var i = 0; i < this._validationErrors.length; i++) {
@@ -408,46 +358,22 @@
       var that = this;
 
       var btnAdd = this._shadowRoot.getElementById("btnAdd");
-      if (btnAdd) {
-        btnAdd.addEventListener("click", function () {
-          that.addRow();
-        });
-      }
+      if (btnAdd) btnAdd.addEventListener("click", function () { that.addRow(); });
 
       var btnCopy = this._shadowRoot.getElementById("btnCopy");
-      if (btnCopy) {
-        btnCopy.addEventListener("click", function () {
-          that.copySelectedRows();
-        });
-      }
+      if (btnCopy) btnCopy.addEventListener("click", function () { that.copySelectedRows(); });
 
       var btnDelete = this._shadowRoot.getElementById("btnDelete");
-      if (btnDelete) {
-        btnDelete.addEventListener("click", function () {
-          that.deleteSelectedRows();
-        });
-      }
+      if (btnDelete) btnDelete.addEventListener("click", function () { that.deleteSelectedRows(); });
 
       var btnValidate = this._shadowRoot.getElementById("btnValidate");
-      if (btnValidate) {
-        btnValidate.addEventListener("click", function () {
-          that.validate();
-        });
-      }
+      if (btnValidate) btnValidate.addEventListener("click", function () { that.validate(); });
 
-      var btnPrepare = this._shadowRoot.getElementById("btnPrepare");
-      if (btnPrepare) {
-        btnPrepare.addEventListener("click", function () {
-          that.prepareSavePayload();
-        });
-      }
+      var btnSave = this._shadowRoot.getElementById("btnSave");
+      if (btnSave) btnSave.addEventListener("click", function () { that.save(); });
 
       var btnClear = this._shadowRoot.getElementById("btnClear");
-      if (btnClear) {
-        btnClear.addEventListener("click", function () {
-          that.clear();
-        });
-      }
+      if (btnClear) btnClear.addEventListener("click", function () { that.clear(); });
 
       var selectAll = this._shadowRoot.getElementById("selectAll");
       if (selectAll) {
@@ -549,9 +475,8 @@
 
     copySelectedRows() {
       var copiedRows = [];
-      var baseLength = this._rows.length;
 
-      for (var i = 0; i < baseLength; i++) {
+      for (var i = 0; i < this._rows.length; i++) {
         if (this._rows[i].selected === true) {
           copiedRows.push({
             rowId: "ROW_" + String(this._rowSequence++),
@@ -704,13 +629,11 @@
       return this._validationResult;
     }
 
-    prepareSavePayload() {
-      this.validate();
+    save() {
+      var validationResult = this.validate();
 
-      if (this._validationResult !== "true") {
-        this._savePayload = [];
-        this._syncRows();
-        return "[]";
+      if (validationResult !== "true") {
+        return;
       }
 
       var payload = [];
@@ -729,18 +652,36 @@
         }
       }
 
+      if (payload.length === 0) {
+        this._validationErrors = [{
+          rowIndex: 0,
+          field: "selected",
+          message: "Please select at least one row to save"
+        }];
+        this._validationResult = "false";
+        this._widgetStatus = "ERROR";
+        this._lastEvent = JSON.stringify({
+          type: "save",
+          status: "NO_SELECTION"
+        });
+        this._syncRows();
+        this._refreshTable();
+        this._fireSimpleEvent("onValidate", {
+          validationResult: this._validationResult,
+          validationErrors: this._validationErrors
+        });
+        return;
+      }
+
       this._savePayload = payload;
       this._lastEvent = JSON.stringify({
-        type: "prepareSavePayload",
+        type: "save",
+        status: "READY",
         payloadCount: payload.length
       });
-      this._widgetStatus = "PAYLOAD_READY";
+      this._widgetStatus = "SAVE_READY";
       this._syncRows();
-      return JSON.stringify(payload);
-    }
-
-    getSavePayload() {
-      return JSON.stringify(this._savePayload || []);
+      this._fireSimpleEvent("onDataChange", { rows: this._rows, savePayload: payload });
     }
 
     getRows() {
