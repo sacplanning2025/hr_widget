@@ -798,11 +798,9 @@
 
       this._activeDropdown = null;
       this._dropdownRowHeight = 32;
-      this._dropdownVisibleCount = 8;
+      this._dropdownVisibleCount = 10;
 
       this._boundDocumentClick = this._handleDocumentClick.bind(this);
-      this._boundWindowScroll = this._handleWindowScroll.bind(this);
-      this._boundWindowResize = this._handleWindowResize.bind(this);
 
       this._render();
     }
@@ -816,22 +814,14 @@
       this._syncRows();
       this._refreshTable();
 
-      document.removeEventListener("click", this._boundDocumentClick, true);
-      document.addEventListener("click", this._boundDocumentClick, true);
-
-      window.removeEventListener("scroll", this._boundWindowScroll, true);
-      window.addEventListener("scroll", this._boundWindowScroll, true);
-
-      window.removeEventListener("resize", this._boundWindowResize, true);
-      window.addEventListener("resize", this._boundWindowResize, true);
+      document.removeEventListener("click", this._boundDocumentClick);
+      document.addEventListener("click", this._boundDocumentClick);
 
       this._fireSimpleEvent("onReady", { status: "ready" });
     }
 
     disconnectedCallback() {
-      document.removeEventListener("click", this._boundDocumentClick, true);
-      window.removeEventListener("scroll", this._boundWindowScroll, true);
-      window.removeEventListener("resize", this._boundWindowResize, true);
+      document.removeEventListener("click", this._boundDocumentClick);
     }
 
     static get observedAttributes() {
@@ -953,225 +943,273 @@
       this._shadowRoot.innerHTML = `
         <style>
           :host {
-            display:block;
-            font-family:"72", Arial, sans-serif;
-            color:#223548;
+            display: block;
+            font-family: "72", Arial, sans-serif;
+            color: #223548;
           }
 
           .wrap {
-            border:1px solid #d9e2ef;
-            border-radius:12px;
-            background:#ffffff;
-            overflow:visible;
-            position:relative;
+            border: 1px solid #d9e2ef;
+            border-radius: 8px;
+            background: #ffffff;
+            overflow: visible;
+            position: relative;
           }
 
           .toolbar {
-            display:flex;
-            justify-content:flex-end;
-            gap:8px;
-            padding:12px;
-            border-bottom:1px solid #e5edf7;
-            background:#f8fbff;
-            flex-wrap:wrap;
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            padding: 10px 12px;
+            border-bottom: 1px solid #e5edf7;
+            background: #f8fbff;
+            flex-wrap: wrap;
           }
 
           .btn {
-            border:1px solid #c7d7ea;
-            background:#ffffff;
-            color:#0a6ed1;
-            border-radius:8px;
-            padding:8px 14px;
-            cursor:pointer;
-            font-weight:600;
-            font-size:13px;
+            border: 1px solid #c7d7ea;
+            background: #ffffff;
+            color: #0a6ed1;
+            border-radius: 8px;
+            padding: 8px 14px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 13px;
           }
 
-          .btn:hover { background:#f3f8fd; }
-          .btn.primary { background:#0a6ed1; color:#ffffff; border-color:#0a6ed1; }
-          .btn.danger { color:#bb1e1e; border-color:#efb4b4; background:#fff7f7; }
+          .btn:hover {
+            background: #f3f8fd;
+          }
+
+          .btn.primary {
+            background: #0a6ed1;
+            color: #ffffff;
+            border-color: #0a6ed1;
+          }
+
+          .btn.danger {
+            color: #bb1e1e;
+            border-color: #efb4b4;
+            background: #fff7f7;
+          }
 
           .gridWrap {
-            overflow:auto;
-            max-height:520px;
-            background:#ffffff;
-            position:relative;
+            overflow-x: auto;
+            overflow-y: visible;
+            max-height: 520px;
+            background: #ffffff;
+            position: relative;
           }
 
           table {
-            border-collapse:separate;
-            border-spacing:0;
-            width:max-content;
-            min-width:100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            width: max-content;
+            min-width: 100%;
           }
 
           th, td {
-            border-bottom:1px solid #edf2f7;
-            padding:8px;
-            vertical-align:top;
-            white-space:nowrap;
-            position:relative;
+            border-bottom: 1px solid #edf2f7;
+            padding: 6px 10px;
+            vertical-align: top;
+            white-space: nowrap;
+            position: relative;
+            overflow: visible;
+            background: #fff;
           }
 
           th {
-            position:sticky;
-            top:0;
-            background:#eef4fb;
-            z-index:2;
-            text-align:left;
-            font-size:12px;
-            color:#223548;
-            font-weight:700;
+            position: sticky;
+            top: 0;
+            background: #eef4fb;
+            z-index: 2;
+            text-align: left;
+            font-size: 12px;
+            color: #223548;
+            font-weight: 700;
           }
 
-          tr:hover td { background:#fafcff; }
-          tr.errorRow td { background:#fff7f7; }
-          tr.modifiedRow td { background:#fffbeb; }
+          tr:hover td {
+            background: #fafcff;
+          }
+
+          tr.errorRow td {
+            background: #fff7f7;
+          }
+
+          tr.modifiedRow td {
+            background: #fffbeb;
+          }
+
+          td.activeDropdownCell {
+            z-index: 50;
+          }
 
           .cell {
-            width:100%;
-            box-sizing:border-box;
-            min-height:34px;
-            height:34px;
-            border:1px solid #c9d6e5;
-            border-radius:6px;
-            padding:6px 10px;
-            font-size:13px;
-            background:#fff;
-            color:#223548;
-            outline:none;
+            width: 100%;
+            box-sizing: border-box;
+            min-height: 30px;
+            height: 30px;
+            border: 1px solid #c9d6e5;
+            border-radius: 6px;
+            padding: 4px 10px;
+            font-size: 12px;
+            background: #fff;
+            color: #223548;
+            outline: none;
           }
 
           .dropdownHost {
-            position:relative;
-            width:100%;
+            position: relative;
+            width: 100%;
+            overflow: visible;
           }
 
           .dropdownTrigger {
-            width:100%;
-            box-sizing:border-box;
-            min-height:34px;
-            height:34px;
-            border:1px solid #c9d6e5;
-            border-radius:6px;
-            padding:6px 32px 6px 10px;
-            font-size:13px;
-            background:#fff;
-            color:#223548;
-            outline:none;
-            cursor:pointer;
-            text-align:left;
-            position:relative;
-            overflow:hidden;
-            text-overflow:ellipsis;
-            white-space:nowrap;
+            width: 100%;
+            box-sizing: border-box;
+            min-height: 30px;
+            height: 30px;
+            border: 1px solid #c9d6e5;
+            border-radius: 6px;
+            padding: 4px 28px 4px 10px;
+            font-size: 12px;
+            background: #fff;
+            color: #223548;
+            outline: none;
+            cursor: pointer;
+            text-align: left;
+            position: relative;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
           }
 
           .dropdownTrigger::after {
-            content:"▼";
-            position:absolute;
-            right:10px;
-            top:50%;
-            transform:translateY(-50%);
-            font-size:10px;
-            color:#5b728a;
-            pointer-events:none;
+            content: "▼";
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 9px;
+            color: #6b7c93;
+            pointer-events: none;
           }
 
-          .dropdownPortal {
-            position:fixed;
-            background:#fff;
-            border:1px solid #c9d6e5;
-            border-radius:8px;
-            box-shadow:0 8px 24px rgba(0,0,0,0.12);
-            z-index:2147483647;
-            overflow:hidden;
+          .dropdownPanel {
+            position: absolute;
+            left: 0;
+            top: calc(100% + 4px);
+            width: 100%;
+            min-width: 230px;
+            background: #fff;
+            border: 1px solid #c9d6e5;
+            border-radius: 8px;
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+            z-index: 60;
+            overflow: hidden;
+          }
+
+          .dropdownSearchWrap {
+            padding: 6px;
+            border-bottom: 1px solid #e8eef5;
+            background: #fff;
           }
 
           .dropdownSearch {
-            width:calc(100% - 16px);
-            margin:8px;
-            height:34px;
-            border:1px solid #c9d6e5;
-            border-radius:6px;
-            padding:6px 10px;
-            box-sizing:border-box;
-            font-size:13px;
+            width: 100%;
+            height: 28px;
+            border: 1px solid #b8c8dc;
+            border-radius: 6px;
+            padding: 4px 8px;
+            box-sizing: border-box;
+            font-size: 12px;
+            outline: none;
           }
 
           .dropdownList {
-            position:relative;
-            height:256px;
-            overflow:auto;
-            border-top:1px solid #edf2f7;
-            background:#fff;
+            position: relative;
+            height: 240px;
+            overflow: auto;
+            background: #fff;
           }
 
           .dropdownSpacer {
-            position:relative;
-            width:100%;
+            position: relative;
+            width: 100%;
           }
 
           .dropdownOptionLayer {
-            position:absolute;
-            left:0;
-            right:0;
-            top:0;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
           }
 
           .dropdownOption {
-            height:32px;
-            line-height:32px;
-            padding:0 10px;
-            cursor:pointer;
-            font-size:13px;
-            overflow:hidden;
-            text-overflow:ellipsis;
-            white-space:nowrap;
-            background:#fff;
+            height: 32px;
+            line-height: 32px;
+            padding: 0 10px;
+            cursor: pointer;
+            font-size: 12px;
+            color: #223548;
+            border-bottom: 1px solid #f2f5f9;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            background: #fff;
           }
 
           .dropdownOption:hover,
           .dropdownOption.active {
-            background:#f3f8fd;
+            background: #f3f8fd;
+          }
+
+          .dropdownFooter {
+            border-top: 1px solid #e8eef5;
+            background: #fafcff;
+            color: #6b7c93;
+            font-size: 11px;
+            padding: 6px 10px;
+            text-align: center;
           }
 
           .rowErr {
-            margin-top:4px;
-            font-size:11px;
-            color:#c53030;
-            white-space:normal;
-            max-width:220px;
-            line-height:1.3;
+            margin-top: 4px;
+            font-size: 11px;
+            color: #c53030;
+            white-space: normal;
+            max-width: 220px;
+            line-height: 1.3;
           }
 
           .summary {
-            padding:10px 12px;
-            border-top:1px solid #e5edf7;
-            display:flex;
-            gap:18px;
-            font-size:12px;
-            background:#fafcff;
-            flex-wrap:wrap;
+            padding: 10px 12px;
+            border-top: 1px solid #e5edf7;
+            display: flex;
+            gap: 18px;
+            font-size: 12px;
+            background: #fafcff;
+            flex-wrap: wrap;
           }
 
           .row-checkbox {
-            width:22px;
-            height:22px;
-            cursor:pointer;
-            margin-top:6px;
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            margin-top: 5px;
           }
 
           .select-all-wrap {
-            display:flex;
-            align-items:center;
-            gap:6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
           }
 
           .select-all-checkbox {
-            width:16px;
-            height:16px;
-            cursor:pointer;
+            width: 14px;
+            height: 14px;
+            cursor: pointer;
           }
         </style>
         <div class="wrap" id="widgetWrap"></div>
@@ -1183,27 +1221,18 @@
         return;
       }
 
-      var trigger = this._activeDropdown.triggerEl;
-      var portal = this._shadowRoot.getElementById("dropdownPortal");
       var path = e.composedPath ? e.composedPath() : [];
+      var clickedInside = false;
 
-      var clickedInsideTrigger = trigger && path.indexOf(trigger) > -1;
-      var clickedInsidePortal = portal && path.indexOf(portal) > -1;
+      for (var i = 0; i < path.length; i++) {
+        if (path[i] === this || path[i] === this._shadowRoot) {
+          clickedInside = true;
+          break;
+        }
+      }
 
-      if (!clickedInsideTrigger && !clickedInsidePortal) {
+      if (!clickedInside) {
         this._closeDropdown();
-      }
-    }
-
-    _handleWindowScroll() {
-      if (this._activeDropdown) {
-        this._positionDropdownPortal();
-      }
-    }
-
-    _handleWindowResize() {
-      if (this._activeDropdown) {
-        this._positionDropdownPortal();
       }
     }
 
@@ -1255,8 +1284,6 @@
     }
 
     _refreshTable() {
-      this._destroyDropdownPortal();
-
       var container = this._shadowRoot.getElementById("widgetWrap");
       var hasSelection = this._hasSelectedRows();
       var allSelected = this._areAllRowsSelected();
@@ -1276,15 +1303,15 @@
       html += '<button class="btn" id="btnClear">Clear</button>';
       html += '</div>';
 
-      html += '<div class="gridWrap" id="gridWrap">';
+      html += '<div class="gridWrap">';
       html += '<table>';
       html += '<thead><tr>';
       html += '<th style="width:70px"><div class="select-all-wrap"><span>Sel</span><input class="select-all-checkbox" type="checkbox" id="selectAll" ' + (allSelected ? 'checked' : '') + ' /></div></th>';
-      html += '<th style="width:220px">Company Code</th>';
+      html += '<th style="width:230px">Company Code</th>';
       html += '<th style="width:180px">Project ID</th>';
-      html += '<th style="width:260px">Description</th>';
-      html += '<th style="width:220px">WBS Element</th>';
-      html += '<th style="width:220px">Customer ID</th>';
+      html += '<th style="width:280px">Description</th>';
+      html += '<th style="width:240px">WBS Element</th>';
+      html += '<th style="width:230px">Customer ID</th>';
       html += '<th style="width:170px">Project Start Date</th>';
       html += '<th style="width:170px">Project End Date</th>';
       html += '<th style="width:180px">% Chance of Winning</th>';
@@ -1303,11 +1330,11 @@
 
         html += '<tr class="' + rowClass + '">';
         html += '<td>' + this._renderCheckboxCell(i, row.selected) + '</td>';
-        html += '<td>' + this._renderSearchableDropdownCell(i, "CompanyCode", row.CompanyCode, this._companyCodeOptions, rowErrors) + '</td>';
+        html += '<td class="' + this._getActiveCellClass(i, "CompanyCode") + '">' + this._renderSearchableDropdownCell(i, "CompanyCode", row.CompanyCode, this._companyCodeOptions, rowErrors) + '</td>';
         html += '<td>' + this._renderInputCell(i, "ProjectID", row.ProjectID, "text", rowErrors) + '</td>';
         html += '<td>' + this._renderInputCell(i, "Description", row.Description, "text", rowErrors) + '</td>';
         html += '<td>' + this._renderInputCell(i, "WBS_Element", row.WBS_Element, "text", rowErrors) + '</td>';
-        html += '<td>' + this._renderSearchableDropdownCell(i, "CustomerID", row.CustomerID, this._customerOptions, rowErrors) + '</td>';
+        html += '<td class="' + this._getActiveCellClass(i, "CustomerID") + '">' + this._renderSearchableDropdownCell(i, "CustomerID", row.CustomerID, this._customerOptions, rowErrors) + '</td>';
         html += '<td>' + this._renderInputCell(i, "ProjectStartDate", row.ProjectStartDate, "date", rowErrors) + '</td>';
         html += '<td>' + this._renderInputCell(i, "ProjectEndDate", row.ProjectEndDate, "date", rowErrors) + '</td>';
         html += '<td>' + this._renderInputCell(i, "ChanceOfWinning", row.ChanceOfWinning, "number", rowErrors) + '</td>';
@@ -1316,7 +1343,6 @@
 
       html += '</tbody></table></div>';
       html += this._refreshStatusBarHtml();
-      html += '<div id="dropdownPortalMount"></div>';
 
       container.innerHTML = html;
       this._bindEvents();
@@ -1324,6 +1350,17 @@
       if (this._activeDropdown) {
         this._restoreActiveDropdown();
       }
+    }
+
+    _getActiveCellClass(rowIndex, fieldName) {
+      if (
+        this._activeDropdown &&
+        this._activeDropdown.rowIndex === rowIndex &&
+        this._activeDropdown.fieldName === fieldName
+      ) {
+        return "activeDropdownCell";
+      }
+      return "";
     }
 
     _renderCheckboxCell(rowIndex, checked) {
@@ -1353,10 +1390,26 @@
     _renderSearchableDropdownCell(rowIndex, fieldName, value, options, rowErrors) {
       var displayText = value ? this._getOptionText(options, value) : "Select";
       var dropdownId = "dd_" + rowIndex + "_" + fieldName;
+      var isOpen = this._activeDropdown && this._activeDropdown.dropdownId === dropdownId;
 
       var html = '';
-      html += '<div class="dropdownHost">';
+      html += '<div class="dropdownHost" data-dropdown-host="' + dropdownId + '">';
       html += '<button type="button" class="dropdownTrigger" data-row="' + rowIndex + '" data-field="' + fieldName + '" data-type="searchable-dropdown" data-dropdown-id="' + dropdownId + '">' + this._escape(displayText) + '</button>';
+
+      if (isOpen) {
+        html += '<div class="dropdownPanel" id="' + dropdownId + '">';
+        html += '<div class="dropdownSearchWrap">';
+        html += '<input class="dropdownSearch" type="text" placeholder="Search..." data-dropdown-search="' + dropdownId + '" />';
+        html += '</div>';
+        html += '<div class="dropdownList" data-dropdown-list="' + dropdownId + '">';
+        html += '<div class="dropdownSpacer" data-dropdown-spacer="' + dropdownId + '">';
+        html += '<div class="dropdownOptionLayer" data-dropdown-layer="' + dropdownId + '"></div>';
+        html += '</div>';
+        html += '</div>';
+        html += '<div class="dropdownFooter" data-dropdown-footer="' + dropdownId + '"></div>';
+        html += '</div>';
+      }
+
       html += '</div>';
       html += this._renderFieldErrors(fieldName, rowErrors);
       return html;
@@ -1436,12 +1489,11 @@
 
         if (type === "searchable-dropdown") {
           el.addEventListener("click", function (e) {
-            e.preventDefault();
             e.stopPropagation();
             var rowIndex = parseInt(this.getAttribute("data-row"), 10);
             var fieldName = this.getAttribute("data-field");
             var dropdownId = this.getAttribute("data-dropdown-id");
-            that._toggleDropdown(dropdownId, rowIndex, fieldName, this);
+            that._toggleDropdown(dropdownId, rowIndex, fieldName);
           });
           return;
         }
@@ -1455,148 +1507,94 @@
       });
     }
 
-    _toggleDropdown(dropdownId, rowIndex, fieldName, triggerEl) {
-      if (
-        this._activeDropdown &&
-        this._activeDropdown.dropdownId === dropdownId
-      ) {
+    _toggleDropdown(dropdownId, rowIndex, fieldName) {
+      if (this._activeDropdown && this._activeDropdown.dropdownId === dropdownId) {
         this._closeDropdown();
         return;
       }
 
-      this._openDropdown(dropdownId, rowIndex, fieldName, triggerEl);
+      this._openDropdown(dropdownId, rowIndex, fieldName);
     }
 
-    _openDropdown(dropdownId, rowIndex, fieldName, triggerEl) {
+    _updateField(rowIndex, fieldName, value) {
+      this._rows[rowIndex][fieldName] = value;
+      this._rows[rowIndex].isModified = true;
+      this._rows[rowIndex].rowStatus = "CHANGED";
+      this._validationErrors = [];
+      this._validationResult = "true";
+      this._widgetStatus = "CHANGED";
+      this._lastEvent = JSON.stringify({
+        type: "fieldChange",
+        rowIndex: rowIndex,
+        field: fieldName,
+        value: value
+      });
+
+      this._syncRows();
+      this._refreshTable();
+      this._fireSimpleEvent("onFieldChange", { rowIndex: rowIndex, field: fieldName, value: value });
+      this._fireSimpleEvent("onDataChange", { rows: this._rows });
+    }
+
+    _openDropdown(dropdownId, rowIndex, fieldName) {
       var options = fieldName === "CompanyCode" ? this._companyCodeOptions : this._customerOptions;
 
       this._activeDropdown = {
         dropdownId: dropdownId,
         rowIndex: rowIndex,
         fieldName: fieldName,
-        triggerEl: triggerEl,
         options: options,
         filteredOptions: options.slice(0),
         searchTerm: "",
         scrollTop: 0
       };
 
-      this._createDropdownPortal();
-      this._positionDropdownPortal();
-      this._bindPortalEvents();
-      this._renderDropdownOptions();
+      this._refreshTable();
     }
 
     _restoreActiveDropdown() {
       if (!this._activeDropdown) return;
 
-      var selector = '[data-dropdown-id="' + this._activeDropdown.dropdownId + '"]';
-      var triggerEl = this._shadowRoot.querySelector(selector);
-
-      if (!triggerEl) {
-        this._activeDropdown = null;
-        return;
-      }
-
-      this._activeDropdown.triggerEl = triggerEl;
-
-      this._createDropdownPortal();
-      this._positionDropdownPortal();
-      this._bindPortalEvents();
-      this._renderDropdownOptions();
-
-      var searchInput = this._shadowRoot.getElementById("dropdownSearch");
-      var list = this._shadowRoot.getElementById("dropdownList");
+      var dropdownId = this._activeDropdown.dropdownId;
+      var searchInput = this._shadowRoot.querySelector('[data-dropdown-search="' + dropdownId + '"]');
+      var list = this._shadowRoot.querySelector('[data-dropdown-list="' + dropdownId + '"]');
 
       if (searchInput) {
         searchInput.value = this._activeDropdown.searchTerm || "";
+
+        var that = this;
+
+        searchInput.addEventListener("input", function (e) {
+          that._handleDropdownSearch(e);
+        });
+
+        searchInput.addEventListener("click", function (e) {
+          e.stopPropagation();
+        });
+
+        searchInput.addEventListener("keydown", function (e) {
+          e.stopPropagation();
+        });
+
         setTimeout(function () {
           searchInput.focus();
         }, 0);
       }
 
       if (list) {
+        list.addEventListener("scroll", this._handleDropdownScroll.bind(this));
+        list.addEventListener("click", function (e) {
+          e.stopPropagation();
+        });
         list.scrollTop = this._activeDropdown.scrollTop || 0;
       }
-    }
 
-    _createDropdownPortal() {
-      var mount = this._shadowRoot.getElementById("dropdownPortalMount");
-      if (!mount) return;
-
-      mount.innerHTML = `
-        <div class="dropdownPortal" id="dropdownPortal">
-          <input class="dropdownSearch" id="dropdownSearch" type="text" placeholder="Search..." />
-          <div class="dropdownList" id="dropdownList">
-            <div class="dropdownSpacer" id="dropdownSpacer">
-              <div class="dropdownOptionLayer" id="dropdownOptionLayer"></div>
-            </div>
-          </div>
-        </div>
-      `;
-    }
-
-    _destroyDropdownPortal() {
-      var mount = this._shadowRoot.getElementById("dropdownPortalMount");
-      if (mount) {
-        mount.innerHTML = "";
-      }
-    }
-
-    _positionDropdownPortal() {
-      if (!this._activeDropdown || !this._activeDropdown.triggerEl) return;
-
-      var portal = this._shadowRoot.getElementById("dropdownPortal");
-      if (!portal) return;
-
-      var rect = this._activeDropdown.triggerEl.getBoundingClientRect();
-      var viewportHeight = window.innerHeight || document.documentElement.clientHeight;
-      var panelHeight = 306;
-      var spaceBelow = viewportHeight - rect.bottom;
-      var spaceAbove = rect.top;
-
-      var showAbove = spaceBelow < panelHeight && spaceAbove > spaceBelow;
-
-      portal.style.width = rect.width + "px";
-      portal.style.left = rect.left + "px";
-
-      if (showAbove) {
-        portal.style.top = Math.max(8, rect.top - panelHeight - 4) + "px";
-      } else {
-        portal.style.top = Math.min(viewportHeight - panelHeight - 8, rect.bottom + 4) + "px";
-      }
-    }
-
-    _bindPortalEvents() {
-      var that = this;
-      var searchInput = this._shadowRoot.getElementById("dropdownSearch");
-      var list = this._shadowRoot.getElementById("dropdownList");
-
-      if (searchInput) {
-        searchInput.oninput = function (e) {
-          that._handleDropdownSearch(e);
-        };
-        searchInput.onclick = function (e) {
-          e.stopPropagation();
-        };
-        searchInput.onkeydown = function (e) {
-          e.stopPropagation();
-        };
-      }
-
-      if (list) {
-        list.onscroll = function (e) {
-          that._handleDropdownScroll(e);
-        };
-        list.onclick = function (e) {
-          e.stopPropagation();
-        };
-      }
+      this._renderDropdownOptions();
     }
 
     _closeDropdown() {
-      this._destroyDropdownPortal();
       this._activeDropdown = null;
+      this._refreshTable();
     }
 
     _handleDropdownSearch(e) {
@@ -1620,7 +1618,7 @@
       this._activeDropdown.filteredOptions = filtered;
       this._activeDropdown.scrollTop = 0;
 
-      var list = this._shadowRoot.getElementById("dropdownList");
+      var list = this._shadowRoot.querySelector('[data-dropdown-list="' + this._activeDropdown.dropdownId + '"]');
       if (list) {
         list.scrollTop = 0;
       }
@@ -1637,9 +1635,11 @@
     _renderDropdownOptions() {
       if (!this._activeDropdown) return;
 
-      var list = this._shadowRoot.getElementById("dropdownList");
-      var spacer = this._shadowRoot.getElementById("dropdownSpacer");
-      var layer = this._shadowRoot.getElementById("dropdownOptionLayer");
+      var dropdownId = this._activeDropdown.dropdownId;
+      var list = this._shadowRoot.querySelector('[data-dropdown-list="' + dropdownId + '"]');
+      var spacer = this._shadowRoot.querySelector('[data-dropdown-spacer="' + dropdownId + '"]');
+      var layer = this._shadowRoot.querySelector('[data-dropdown-layer="' + dropdownId + '"]');
+      var footer = this._shadowRoot.querySelector('[data-dropdown-footer="' + dropdownId + '"]');
 
       if (!list || !spacer || !layer) return;
 
@@ -1655,6 +1655,7 @@
       layer.style.transform = "translateY(" + (startIndex * rowHeight) + "px)";
 
       var html = '';
+
       for (var i = startIndex; i < endIndex; i++) {
         var opt = options[i];
         var isActive = String(opt.key) === String(selectedValue);
@@ -1662,42 +1663,28 @@
       }
 
       if (options.length === 0) {
-        html = '<div class="dropdownOption">No results found</div>';
+        spacer.style.height = "32px";
         layer.style.transform = "translateY(0px)";
+        html = '<div class="dropdownOption">No results found</div>';
       }
 
       layer.innerHTML = html;
 
+      if (footer) {
+        var shown = options.length > 0 ? Math.min(endIndex, options.length) : 0;
+        footer.textContent = "Showing " + shown + " of " + options.length;
+      }
+
       var that = this;
       var optionEls = layer.querySelectorAll(".dropdownOption[data-option-key]");
       Array.prototype.forEach.call(optionEls, function (el) {
-        el.onclick = function (e) {
+        el.addEventListener("click", function (e) {
           e.stopPropagation();
           var selectedKey = this.getAttribute("data-option-key");
           that._updateField(that._activeDropdown.rowIndex, that._activeDropdown.fieldName, selectedKey);
           that._closeDropdown();
-        };
+        });
       });
-    }
-
-    _updateField(rowIndex, fieldName, value) {
-      this._rows[rowIndex][fieldName] = value;
-      this._rows[rowIndex].isModified = true;
-      this._rows[rowIndex].rowStatus = "CHANGED";
-      this._validationErrors = [];
-      this._validationResult = "true";
-      this._widgetStatus = "CHANGED";
-      this._lastEvent = JSON.stringify({
-        type: "fieldChange",
-        rowIndex: rowIndex,
-        field: fieldName,
-        value: value
-      });
-
-      this._syncRows();
-      this._refreshTable();
-      this._fireSimpleEvent("onFieldChange", { rowIndex: rowIndex, field: fieldName, value: value });
-      this._fireSimpleEvent("onDataChange", { rows: this._rows });
     }
 
     _fireSimpleEvent(name, detail) {
@@ -1814,7 +1801,7 @@
       if (!value) {
         return false;
       }
-      return /^\d{4}-\d{2}-\d{2}$/.test(String(value));
+      return /^\\d{4}-\\d{2}-\\d{2}$/.test(String(value));
     }
 
     validate() {
@@ -2044,3 +2031,4 @@
     customElements.define("com-company-projectentrywidget", ProjectEntryWidget);
   }
 })();
+
