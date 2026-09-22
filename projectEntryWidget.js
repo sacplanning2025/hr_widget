@@ -801,6 +801,8 @@
       this._dropdownVisibleCount = 8;
 
       this._boundDocumentClick = this._handleDocumentClick.bind(this);
+      this._boundWindowScroll = this._handleWindowScroll.bind(this);
+      this._boundWindowResize = this._handleWindowResize.bind(this);
 
       this._render();
     }
@@ -814,14 +816,22 @@
       this._syncRows();
       this._refreshTable();
 
-      document.removeEventListener("click", this._boundDocumentClick);
-      document.addEventListener("click", this._boundDocumentClick);
+      document.removeEventListener("click", this._boundDocumentClick, true);
+      document.addEventListener("click", this._boundDocumentClick, true);
+
+      window.removeEventListener("scroll", this._boundWindowScroll, true);
+      window.addEventListener("scroll", this._boundWindowScroll, true);
+
+      window.removeEventListener("resize", this._boundWindowResize, true);
+      window.addEventListener("resize", this._boundWindowResize, true);
 
       this._fireSimpleEvent("onReady", { status: "ready" });
     }
 
     disconnectedCallback() {
-      document.removeEventListener("click", this._boundDocumentClick);
+      document.removeEventListener("click", this._boundDocumentClick, true);
+      window.removeEventListener("scroll", this._boundWindowScroll, true);
+      window.removeEventListener("resize", this._boundWindowResize, true);
     }
 
     static get observedAttributes() {
@@ -982,8 +992,7 @@
           .btn.danger { color:#bb1e1e; border-color:#efb4b4; background:#fff7f7; }
 
           .gridWrap {
-            overflow-x:auto;
-            overflow-y:visible;
+            overflow:auto;
             max-height:520px;
             background:#ffffff;
             position:relative;
@@ -1002,7 +1011,6 @@
             vertical-align:top;
             white-space:nowrap;
             position:relative;
-            overflow:visible;
           }
 
           th {
@@ -1019,10 +1027,6 @@
           tr:hover td { background:#fafcff; }
           tr.errorRow td { background:#fff7f7; }
           tr.modifiedRow td { background:#fffbeb; }
-
-          td.activeDropdownCell {
-            z-index:10001;
-          }
 
           .cell {
             width:100%;
@@ -1041,12 +1045,6 @@
           .dropdownHost {
             position:relative;
             width:100%;
-            overflow:visible;
-            z-index:1;
-          }
-
-          .dropdownHost.open {
-            z-index:10002;
           }
 
           .dropdownTrigger {
@@ -1080,18 +1078,13 @@
             pointer-events:none;
           }
 
-          .dropdownPanel {
-            position:absolute;
-            left:0;
-            right:0;
-            top:calc(100% + 4px);
-            min-width:100%;
-            width:100%;
+          .dropdownPortal {
+            position:fixed;
             background:#fff;
             border:1px solid #c9d6e5;
             border-radius:8px;
             box-shadow:0 8px 24px rgba(0,0,0,0.12);
-            z-index:10003;
+            z-index:2147483647;
             overflow:hidden;
           }
 
@@ -1190,18 +1183,27 @@
         return;
       }
 
+      var trigger = this._activeDropdown.triggerEl;
+      var portal = this._shadowRoot.getElementById("dropdownPortal");
       var path = e.composedPath ? e.composedPath() : [];
-      var clickedInside = false;
 
-      for (var i = 0; i < path.length; i++) {
-        if (path[i] === this || path[i] === this._shadowRoot) {
-          clickedInside = true;
-          break;
-        }
-      }
+      var clickedInsideTrigger = trigger && path.indexOf(trigger) > -1;
+      var clickedInsidePortal = portal && path.indexOf(portal) > -1;
 
-      if (!clickedInside) {
+      if (!clickedInsideTrigger && !clickedInsidePortal) {
         this._closeDropdown();
+      }
+    }
+
+    _handleWindowScroll() {
+      if (this._activeDropdown) {
+        this._positionDropdownPortal();
+      }
+    }
+
+    _handleWindowResize() {
+      if (this._activeDropdown) {
+        this._positionDropdownPortal();
       }
     }
 
@@ -1253,6 +1255,8 @@
     }
 
     _refreshTable() {
+      this._destroyDropdownPortal();
+
       var container = this._shadowRoot.getElementById("widgetWrap");
       var hasSelection = this._hasSelectedRows();
       var allSelected = this._areAllRowsSelected();
@@ -1272,7 +1276,7 @@
       html += '<button class="btn" id="btnClear">Clear</button>';
       html += '</div>';
 
-      html += '<div class="gridWrap">';
+      html += '<div class="gridWrap" id="gridWrap">';
       html += '<table>';
       html += '<thead><tr>';
       html += '<th style="width:70px"><div class="select-all-wrap"><span>Sel</span><input class="select-all-checkbox" type="checkbox" id="selectAll" ' + (allSelected ? 'checked' : '') + ' /></div></th>';
@@ -1299,11 +1303,11 @@
 
         html += '<tr class="' + rowClass + '">';
         html += '<td>' + this._renderCheckboxCell(i, row.selected) + '</td>';
-        html += '<td class="' + this._getActiveCellClass(i, "CompanyCode") + '">' + this._renderSearchableDropdownCell(i, "CompanyCode", row.CompanyCode, this._companyCodeOptions, rowErrors) + '</td>';
+        html += '<td>' + this._renderSearchableDropdownCell(i, "CompanyCode", row.CompanyCode, this._companyCodeOptions, rowErrors) + '</td>';
         html += '<td>' + this._renderInputCell(i, "ProjectID", row.ProjectID, "text", rowErrors) + '</td>';
         html += '<td>' + this._renderInputCell(i, "Description", row.Description, "text", rowErrors) + '</td>';
         html += '<td>' + this._renderInputCell(i, "WBS_Element", row.WBS_Element, "text", rowErrors) + '</td>';
-        html += '<td class="' + this._getActiveCellClass(i, "CustomerID") + '">' + this._renderSearchableDropdownCell(i, "CustomerID", row.CustomerID, this._customerOptions, rowErrors) + '</td>';
+        html += '<td>' + this._renderSearchableDropdownCell(i, "CustomerID", row.CustomerID, this._customerOptions, rowErrors) + '</td>';
         html += '<td>' + this._renderInputCell(i, "ProjectStartDate", row.ProjectStartDate, "date", rowErrors) + '</td>';
         html += '<td>' + this._renderInputCell(i, "ProjectEndDate", row.ProjectEndDate, "date", rowErrors) + '</td>';
         html += '<td>' + this._renderInputCell(i, "ChanceOfWinning", row.ChanceOfWinning, "number", rowErrors) + '</td>';
@@ -1312,6 +1316,7 @@
 
       html += '</tbody></table></div>';
       html += this._refreshStatusBarHtml();
+      html += '<div id="dropdownPortalMount"></div>';
 
       container.innerHTML = html;
       this._bindEvents();
@@ -1319,17 +1324,6 @@
       if (this._activeDropdown) {
         this._restoreActiveDropdown();
       }
-    }
-
-    _getActiveCellClass(rowIndex, fieldName) {
-      if (
-        this._activeDropdown &&
-        this._activeDropdown.rowIndex === rowIndex &&
-        this._activeDropdown.fieldName === fieldName
-      ) {
-        return "activeDropdownCell";
-      }
-      return "";
     }
 
     _renderCheckboxCell(rowIndex, checked) {
@@ -1359,18 +1353,11 @@
     _renderSearchableDropdownCell(rowIndex, fieldName, value, options, rowErrors) {
       var displayText = value ? this._getOptionText(options, value) : "Select";
       var dropdownId = "dd_" + rowIndex + "_" + fieldName;
-      var isOpen = this._activeDropdown &&
-        this._activeDropdown.dropdownId === dropdownId;
 
       var html = '';
-      html += '<div class="dropdownHost ' + (isOpen ? 'open' : '') + '" data-dropdown-host="' + dropdownId + '">';
+      html += '<div class="dropdownHost">';
       html += '<button type="button" class="dropdownTrigger" data-row="' + rowIndex + '" data-field="' + fieldName + '" data-type="searchable-dropdown" data-dropdown-id="' + dropdownId + '">' + this._escape(displayText) + '</button>';
-      html += '<div class="dropdownPanel" id="' + dropdownId + '" style="display:' + (isOpen ? 'block' : 'none') + ';">';
-      html += '<input class="dropdownSearch" type="text" placeholder="Search..." data-dropdown-search="' + dropdownId + '" />';
-      html += '<div class="dropdownList" data-dropdown-list="' + dropdownId + '">';
-      html += '<div class="dropdownSpacer" data-dropdown-spacer="' + dropdownId + '">';
-      html += '<div class="dropdownOptionLayer" data-dropdown-layer="' + dropdownId + '"></div>';
-      html += '</div></div></div></div>';
+      html += '</div>';
       html += this._renderFieldErrors(fieldName, rowErrors);
       return html;
     }
@@ -1449,11 +1436,12 @@
 
         if (type === "searchable-dropdown") {
           el.addEventListener("click", function (e) {
+            e.preventDefault();
             e.stopPropagation();
             var rowIndex = parseInt(this.getAttribute("data-row"), 10);
             var fieldName = this.getAttribute("data-field");
             var dropdownId = this.getAttribute("data-dropdown-id");
-            that._toggleDropdown(dropdownId, rowIndex, fieldName);
+            that._toggleDropdown(dropdownId, rowIndex, fieldName, this);
           });
           return;
         }
@@ -1467,7 +1455,7 @@
       });
     }
 
-    _toggleDropdown(dropdownId, rowIndex, fieldName) {
+    _toggleDropdown(dropdownId, rowIndex, fieldName, triggerEl) {
       if (
         this._activeDropdown &&
         this._activeDropdown.dropdownId === dropdownId
@@ -1476,112 +1464,139 @@
         return;
       }
 
-      this._openDropdown(dropdownId, rowIndex, fieldName);
+      this._openDropdown(dropdownId, rowIndex, fieldName, triggerEl);
     }
 
-    _updateField(rowIndex, fieldName, value) {
-      this._rows[rowIndex][fieldName] = value;
-      this._rows[rowIndex].isModified = true;
-      this._rows[rowIndex].rowStatus = "CHANGED";
-      this._validationErrors = [];
-      this._validationResult = "true";
-      this._widgetStatus = "CHANGED";
-      this._lastEvent = JSON.stringify({
-        type: "fieldChange",
-        rowIndex: rowIndex,
-        field: fieldName,
-        value: value
-      });
-
-      this._syncRows();
-      this._refreshTable();
-      this._fireSimpleEvent("onFieldChange", { rowIndex: rowIndex, field: fieldName, value: value });
-      this._fireSimpleEvent("onDataChange", { rows: this._rows });
-    }
-
-    _openDropdown(dropdownId, rowIndex, fieldName) {
+    _openDropdown(dropdownId, rowIndex, fieldName, triggerEl) {
       var options = fieldName === "CompanyCode" ? this._companyCodeOptions : this._customerOptions;
 
       this._activeDropdown = {
         dropdownId: dropdownId,
         rowIndex: rowIndex,
         fieldName: fieldName,
+        triggerEl: triggerEl,
         options: options,
         filteredOptions: options.slice(0),
         searchTerm: "",
         scrollTop: 0
       };
 
-      this._refreshTable();
+      this._createDropdownPortal();
+      this._positionDropdownPortal();
+      this._bindPortalEvents();
+      this._renderDropdownOptions();
     }
 
     _restoreActiveDropdown() {
       if (!this._activeDropdown) return;
 
-      var dropdownId = this._activeDropdown.dropdownId;
-      var searchInput = this._shadowRoot.querySelector('[data-dropdown-search="' + dropdownId + '"]');
-      var list = this._shadowRoot.querySelector('[data-dropdown-list="' + dropdownId + '"]');
+      var selector = '[data-dropdown-id="' + this._activeDropdown.dropdownId + '"]';
+      var triggerEl = this._shadowRoot.querySelector(selector);
+
+      if (!triggerEl) {
+        this._activeDropdown = null;
+        return;
+      }
+
+      this._activeDropdown.triggerEl = triggerEl;
+
+      this._createDropdownPortal();
+      this._positionDropdownPortal();
+      this._bindPortalEvents();
+      this._renderDropdownOptions();
+
+      var searchInput = this._shadowRoot.getElementById("dropdownSearch");
+      var list = this._shadowRoot.getElementById("dropdownList");
 
       if (searchInput) {
         searchInput.value = this._activeDropdown.searchTerm || "";
-
-        if (this._handleDropdownSearchBound) {
-          searchInput.removeEventListener("input", this._handleDropdownSearchBound);
-        }
-
-        this._handleDropdownSearchBound = this._handleDropdownSearch.bind(this);
-        searchInput.addEventListener("input", this._handleDropdownSearchBound);
-
-        searchInput.addEventListener("click", function (e) {
-          e.stopPropagation();
-        });
-
-        searchInput.addEventListener("keydown", function (e) {
-          e.stopPropagation();
-        });
-
         setTimeout(function () {
           searchInput.focus();
         }, 0);
       }
 
       if (list) {
-        if (this._handleDropdownScrollBound) {
-          list.removeEventListener("scroll", this._handleDropdownScrollBound);
-        }
-
-        this._handleDropdownScrollBound = this._handleDropdownScroll.bind(this);
-        list.addEventListener("scroll", this._handleDropdownScrollBound);
-        list.addEventListener("click", function (e) {
-          e.stopPropagation();
-        });
-
         list.scrollTop = this._activeDropdown.scrollTop || 0;
       }
+    }
 
-      this._renderDropdownOptions();
+    _createDropdownPortal() {
+      var mount = this._shadowRoot.getElementById("dropdownPortalMount");
+      if (!mount) return;
+
+      mount.innerHTML = `
+        <div class="dropdownPortal" id="dropdownPortal">
+          <input class="dropdownSearch" id="dropdownSearch" type="text" placeholder="Search..." />
+          <div class="dropdownList" id="dropdownList">
+            <div class="dropdownSpacer" id="dropdownSpacer">
+              <div class="dropdownOptionLayer" id="dropdownOptionLayer"></div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    _destroyDropdownPortal() {
+      var mount = this._shadowRoot.getElementById("dropdownPortalMount");
+      if (mount) {
+        mount.innerHTML = "";
+      }
+    }
+
+    _positionDropdownPortal() {
+      if (!this._activeDropdown || !this._activeDropdown.triggerEl) return;
+
+      var portal = this._shadowRoot.getElementById("dropdownPortal");
+      if (!portal) return;
+
+      var rect = this._activeDropdown.triggerEl.getBoundingClientRect();
+      var viewportHeight = window.innerHeight || document.documentElement.clientHeight;
+      var panelHeight = 306;
+      var spaceBelow = viewportHeight - rect.bottom;
+      var spaceAbove = rect.top;
+
+      var showAbove = spaceBelow < panelHeight && spaceAbove > spaceBelow;
+
+      portal.style.width = rect.width + "px";
+      portal.style.left = rect.left + "px";
+
+      if (showAbove) {
+        portal.style.top = Math.max(8, rect.top - panelHeight - 4) + "px";
+      } else {
+        portal.style.top = Math.min(viewportHeight - panelHeight - 8, rect.bottom + 4) + "px";
+      }
+    }
+
+    _bindPortalEvents() {
+      var that = this;
+      var searchInput = this._shadowRoot.getElementById("dropdownSearch");
+      var list = this._shadowRoot.getElementById("dropdownList");
+
+      if (searchInput) {
+        searchInput.oninput = function (e) {
+          that._handleDropdownSearch(e);
+        };
+        searchInput.onclick = function (e) {
+          e.stopPropagation();
+        };
+        searchInput.onkeydown = function (e) {
+          e.stopPropagation();
+        };
+      }
+
+      if (list) {
+        list.onscroll = function (e) {
+          that._handleDropdownScroll(e);
+        };
+        list.onclick = function (e) {
+          e.stopPropagation();
+        };
+      }
     }
 
     _closeDropdown() {
-      if (!this._activeDropdown) return;
-
-      var dropdownId = this._activeDropdown.dropdownId;
-      var searchInput = this._shadowRoot.querySelector('[data-dropdown-search="' + dropdownId + '"]');
-      var list = this._shadowRoot.querySelector('[data-dropdown-list="' + dropdownId + '"]');
-
-      if (searchInput && this._handleDropdownSearchBound) {
-        searchInput.removeEventListener("input", this._handleDropdownSearchBound);
-      }
-
-      if (list && this._handleDropdownScrollBound) {
-        list.removeEventListener("scroll", this._handleDropdownScrollBound);
-      }
-
+      this._destroyDropdownPortal();
       this._activeDropdown = null;
-      this._handleDropdownSearchBound = null;
-      this._handleDropdownScrollBound = null;
-
-      this._refreshTable();
     }
 
     _handleDropdownSearch(e) {
@@ -1605,8 +1620,10 @@
       this._activeDropdown.filteredOptions = filtered;
       this._activeDropdown.scrollTop = 0;
 
-      var list = this._shadowRoot.querySelector('[data-dropdown-list="' + this._activeDropdown.dropdownId + '"]');
-      if (list) list.scrollTop = 0;
+      var list = this._shadowRoot.getElementById("dropdownList");
+      if (list) {
+        list.scrollTop = 0;
+      }
 
       this._renderDropdownOptions();
     }
@@ -1620,10 +1637,9 @@
     _renderDropdownOptions() {
       if (!this._activeDropdown) return;
 
-      var dropdownId = this._activeDropdown.dropdownId;
-      var list = this._shadowRoot.querySelector('[data-dropdown-list="' + dropdownId + '"]');
-      var spacer = this._shadowRoot.querySelector('[data-dropdown-spacer="' + dropdownId + '"]');
-      var layer = this._shadowRoot.querySelector('[data-dropdown-layer="' + dropdownId + '"]');
+      var list = this._shadowRoot.getElementById("dropdownList");
+      var spacer = this._shadowRoot.getElementById("dropdownSpacer");
+      var layer = this._shadowRoot.getElementById("dropdownOptionLayer");
 
       if (!list || !spacer || !layer) return;
 
@@ -1642,7 +1658,7 @@
       for (var i = startIndex; i < endIndex; i++) {
         var opt = options[i];
         var isActive = String(opt.key) === String(selectedValue);
-        html += '<div class="dropdownOption' + (isActive ? ' active' : '') + '" data-option-index="' + i + '" data-option-key="' + this._escape(opt.key) + '">' + this._escape(opt.text || opt.key) + '</div>';
+        html += '<div class="dropdownOption' + (isActive ? ' active' : '') + '" data-option-key="' + this._escape(opt.key) + '">' + this._escape(opt.text || opt.key) + '</div>';
       }
 
       if (options.length === 0) {
@@ -1655,13 +1671,33 @@
       var that = this;
       var optionEls = layer.querySelectorAll(".dropdownOption[data-option-key]");
       Array.prototype.forEach.call(optionEls, function (el) {
-        el.addEventListener("click", function (e) {
+        el.onclick = function (e) {
           e.stopPropagation();
           var selectedKey = this.getAttribute("data-option-key");
           that._updateField(that._activeDropdown.rowIndex, that._activeDropdown.fieldName, selectedKey);
           that._closeDropdown();
-        });
+        };
       });
+    }
+
+    _updateField(rowIndex, fieldName, value) {
+      this._rows[rowIndex][fieldName] = value;
+      this._rows[rowIndex].isModified = true;
+      this._rows[rowIndex].rowStatus = "CHANGED";
+      this._validationErrors = [];
+      this._validationResult = "true";
+      this._widgetStatus = "CHANGED";
+      this._lastEvent = JSON.stringify({
+        type: "fieldChange",
+        rowIndex: rowIndex,
+        field: fieldName,
+        value: value
+      });
+
+      this._syncRows();
+      this._refreshTable();
+      this._fireSimpleEvent("onFieldChange", { rowIndex: rowIndex, field: fieldName, value: value });
+      this._fireSimpleEvent("onDataChange", { rows: this._rows });
     }
 
     _fireSimpleEvent(name, detail) {
