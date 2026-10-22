@@ -893,4 +893,4 @@
   if (!customElements.get("com-company-assetentrywidget")) {
     customElements.define("com-company-assetentrywidget", AssetEntryWidget);
   }
-})(); update js also remove hierachy in this also in capitalized add calender to select capetalized month
+})(); 
