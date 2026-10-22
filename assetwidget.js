@@ -15,17 +15,15 @@
       this._companyOptions = [];
       this._costCenterOptions = [];
       this._assetClassOptions = [];
-      this._h1Options = [];
 
       this._columns = [
         { key: "selected", label: "Sel", type: "checkbox", width: "70px" },
         { key: "ID", label: "ID", type: "input", width: "200px" },
         { key: "DESCRIPTION", label: "Description", type: "input", width: "240px" },
-        { key: "H1", label: "H1", type: "select", width: "180px" },
         { key: "COMPANY", label: "Company", type: "select", width: "160px" },
         { key: "COSTCENTER", label: "Cost Center", type: "select", width: "180px" },
         { key: "ASSET_CLASS", label: "Asset Class", type: "select", width: "180px" },
-        { key: "CAPITALIZED", label: "Capitalized", type: "input", width: "150px" }
+        { key: "CAPITALIZED", label: "Capitalized", type: "month", width: "170px" }
       ];
 
       this._render();
@@ -47,8 +45,7 @@
         "rows",
         "companyOptions",
         "costCenterOptions",
-        "assetClassOptions",
-        "h1Options"
+        "assetClassOptions"
       ];
     }
 
@@ -77,11 +74,6 @@
         this._refreshTable();
         return;
       }
-
-      if (name === "h1Options") {
-        this._h1Options = this._parseOptions(newValue);
-        this._refreshTable();
-      }
     }
 
     _createEmptyRow() {
@@ -92,7 +84,6 @@
         rowStatus: "NEW",
         ID: "",
         DESCRIPTION: "",
-        H1: "",
         COMPANY: "",
         COSTCENTER: "",
         ASSET_CLASS: "",
@@ -108,11 +99,10 @@
 
       row.ID = this._safeString(row.ID);
       row.DESCRIPTION = this._safeString(row.DESCRIPTION);
-      row.H1 = this._safeString(row.H1);
       row.COMPANY = this._safeString(row.COMPANY);
       row.COSTCENTER = this._safeString(row.COSTCENTER);
       row.ASSET_CLASS = this._safeString(row.ASSET_CLASS);
-      row.CAPITALIZED = this._safeString(row.CAPITALIZED);
+      row.CAPITALIZED = this._normalizeCapitalized(this._safeString(row.CAPITALIZED));
     }
 
     _normalizeAllRows() {
@@ -162,17 +152,32 @@
       if (fieldName === "COMPANY") return this._companyOptions || [];
       if (fieldName === "COSTCENTER") return this._costCenterOptions || [];
       if (fieldName === "ASSET_CLASS") return this._assetClassOptions || [];
-      if (fieldName === "H1") return this._h1Options || [];
       return [];
     }
 
-    _getOptionText(fieldName, value) {
-      var options = this._getOptionsForField(fieldName);
-      var valueStr = String(value || "");
-      for (var i = 0; i < options.length; i++) {
-        if (String(options[i].key) === valueStr) {
-          return options[i].text;
-        }
+    _normalizeCapitalized(value) {
+      var v = this._safeString(value);
+      if (/^\d{6}$/.test(v)) {
+        return v;
+      }
+      if (/^\d{4}-\d{2}$/.test(v)) {
+        return v.replace("-", "");
+      }
+      return "";
+    }
+
+    _capitalizedToMonthInput(value) {
+      var v = this._normalizeCapitalized(value);
+      if (/^\d{6}$/.test(v)) {
+        return v.substring(0, 4) + "-" + v.substring(4, 6);
+      }
+      return "";
+    }
+
+    _monthInputToCapitalized(value) {
+      var v = this._safeString(value);
+      if (/^\d{4}-\d{2}$/.test(v)) {
+        return v.replace("-", "");
       }
       return "";
     }
@@ -451,6 +456,17 @@
           + this._renderFieldErrors(column.key, rowErrors);
       }
 
+      if (column.type === "month") {
+        return ''
+          + '<input class="cell ' + errorCss + '"'
+          + ' data-row="' + rowIndex + '"'
+          + ' data-field="' + column.key + '"'
+          + ' data-type="month"'
+          + ' type="month"'
+          + ' value="' + this._escape(this._capitalizedToMonthInput(String(value))) + '" />'
+          + this._renderFieldErrors(column.key, rowErrors);
+      }
+
       if (column.type === "select") {
         var options = this._getOptionsForField(column.key);
         var html = '<select class="select ' + errorCss + '" data-row="' + rowIndex + '" data-field="' + column.key + '" data-type="select">';
@@ -544,6 +560,16 @@
             var value = this.value;
             that._updateField(rowIndex, fieldName, value);
           });
+          return;
+        }
+
+        if (type === "month") {
+          el.addEventListener("change", function () {
+            var rowIndex = parseInt(this.getAttribute("data-row"), 10);
+            var fieldName = this.getAttribute("data-field");
+            var value = that._monthInputToCapitalized(this.value);
+            that._updateField(rowIndex, fieldName, value);
+          });
         }
       });
     }
@@ -613,7 +639,6 @@
             rowStatus: "NEW",
             ID: this._rows[i].ID || "",
             DESCRIPTION: this._rows[i].DESCRIPTION || "",
-            H1: this._rows[i].H1 || "",
             COMPANY: this._rows[i].COMPANY || "",
             COSTCENTER: this._rows[i].COSTCENTER || "",
             ASSET_CLASS: this._rows[i].ASSET_CLASS || "",
@@ -680,7 +705,6 @@
 
         if (!row.ID) errors.push({ rowIndex: rowIndex, field: "ID", message: "ID is mandatory" });
         if (!row.DESCRIPTION) errors.push({ rowIndex: rowIndex, field: "DESCRIPTION", message: "Description is mandatory" });
-        if (!row.H1) errors.push({ rowIndex: rowIndex, field: "H1", message: "H1 is mandatory" });
         if (!row.COMPANY) errors.push({ rowIndex: rowIndex, field: "COMPANY", message: "Company is mandatory" });
         if (!row.COSTCENTER) errors.push({ rowIndex: rowIndex, field: "COSTCENTER", message: "Cost Center is mandatory" });
         if (!row.ASSET_CLASS) errors.push({ rowIndex: rowIndex, field: "ASSET_CLASS", message: "Asset Class is mandatory" });
@@ -740,7 +764,6 @@
           payload.push({
             ID: this._rows[i].ID,
             DESCRIPTION: this._rows[i].DESCRIPTION,
-            H1: this._rows[i].H1,
             COMPANY: this._rows[i].COMPANY,
             COSTCENTER: this._rows[i].COSTCENTER,
             ASSET_CLASS: this._rows[i].ASSET_CLASS,
@@ -862,11 +885,6 @@
       this._refreshTable();
     }
 
-    setH1Options(json) {
-      this._h1Options = this._parseOptions(json);
-      this._refreshTable();
-    }
-
     setVisible(flag) {
       this.style.display = flag ? "block" : "none";
     }
@@ -875,4 +893,4 @@
   if (!customElements.get("com-company-assetentrywidget")) {
     customElements.define("com-company-assetentrywidget", AssetEntryWidget);
   }
-})();
+})(); update js also remove hierachy in this also in capitalized add calender to select capetalized month
