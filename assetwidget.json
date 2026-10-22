@@ -1,6 +1,6 @@
 {
   "id": "com.company.assetentrywidget",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "name": "Asset Entry Widget",
   "description": "Asset entry table widget for SAC",
   "vendor": "Arnav Choudhary",
@@ -26,8 +26,7 @@
     "widgetStatus": { "type": "string", "default": "READY" },
     "companyOptions": { "type": "string", "default": "[]" },
     "costCenterOptions": { "type": "string", "default": "[]" },
-    "assetClassOptions": { "type": "string", "default": "[]" },
-    "h1Options": { "type": "string", "default": "[]" }
+    "assetClassOptions": { "type": "string", "default": "[]" }
   },
   "methods": {
     "getRows": { "returnType": "string" },
@@ -72,11 +71,6 @@
       ]
     },
     "setAssetClassOptions": {
-      "parameters": [
-        { "name": "json", "type": "string" }
-      ]
-    },
-    "setH1Options": {
       "parameters": [
         { "name": "json", "type": "string" }
       ]
