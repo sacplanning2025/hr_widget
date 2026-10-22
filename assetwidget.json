@@ -1,16 +1,16 @@
 {
-  "id": "com.company.projectentrywidget",
-  "version": "6.1.2",
+  "id": "com.company.assetentrywidget",
+  "version": "1.0.0",
   "name": "Asset Entry Widget",
-  "description": "Project entry table widget for SAC",
+  "description": "Asset entry table widget for SAC",
   "vendor": "Arnav Choudhary",
-  "newInstancePrefix": "ProjectEntryWidget",
+  "newInstancePrefix": "AssetEntryWidget",
   "icon": "sap-icon://table-view",
   "webcomponents": [
     {
       "kind": "main",
-      "tag": "com-company-projectentrywidget",
-      "url": "https://sacplanning2025.github.io/hr_widget/projectEntryWidget.js",
+      "tag": "com-company-assetentrywidget",
+      "url": "https://sacplanning2025.github.io/hr_widget/assetwidget.js",
       "integrity": "",
       "ignoreIntegrity": true
     }
@@ -24,8 +24,10 @@
     "rowCount": { "type": "integer", "default": 0 },
     "selectedRowCount": { "type": "integer", "default": 0 },
     "widgetStatus": { "type": "string", "default": "READY" },
-    "companyCodeOptions": { "type": "string", "default": "[]" },
-    "customerOptions": { "type": "string", "default": "[]" }
+    "companyOptions": { "type": "string", "default": "[]" },
+    "costCenterOptions": { "type": "string", "default": "[]" },
+    "assetClassOptions": { "type": "string", "default": "[]" },
+    "h1Options": { "type": "string", "default": "[]" }
   },
   "methods": {
     "getRows": { "returnType": "string" },
@@ -58,17 +60,32 @@
     "save": {},
     "getValidationErrors": { "returnType": "string" },
     "getValidationResult": { "returnType": "string" },
-    "setCompanyCodeOptions": {
+    "getLastEvent": { "returnType": "string" },
+    "setCompanyOptions": {
       "parameters": [
         { "name": "json", "type": "string" }
       ]
     },
-    "setCustomerOptions": {
+    "setCostCenterOptions": {
       "parameters": [
         { "name": "json", "type": "string" }
       ]
     },
-    "getLastEvent": { "returnType": "string" }
+    "setAssetClassOptions": {
+      "parameters": [
+        { "name": "json", "type": "string" }
+      ]
+    },
+    "setH1Options": {
+      "parameters": [
+        { "name": "json", "type": "string" }
+      ]
+    },
+    "setVisible": {
+      "parameters": [
+        { "name": "flag", "type": "boolean" }
+      ]
+    }
   },
   "events": {
     "onFieldChange": {},
