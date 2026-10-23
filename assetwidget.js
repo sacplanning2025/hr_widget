@@ -379,6 +379,7 @@
           .monthWrap {
             position: relative;
             width: 100%;
+            overflow: visible;
           }
 
           .dropdownDisplay,
@@ -426,7 +427,6 @@
             flex-shrink: 0;
           }
 
-          .clearIcon,
           .dropdownArrow,
           .closeIcon {
             border: none;
@@ -510,19 +510,6 @@
             font-size: 12px;
             cursor: pointer;
             padding: 0;
-          }
-
-          .monthPanel {
-            position: absolute;
-            top: calc(100% + 4px);
-            left: 0;
-            width: 250px;
-            background: #fff;
-            border: 1px solid #c9d6e5;
-            border-radius: 8px;
-            box-shadow: 0 8px 24px rgba(34,53,72,0.16);
-            z-index: 9999;
-            overflow: hidden;
           }
 
           .yearSelect {
@@ -730,7 +717,6 @@
         html += '<div class="floatingPanel floatingDropdownPanel" style="top:' + p.top + 'px; left:' + p.left + 'px; width:' + p.width + 'px;">';
         html += '<div class="dropdownHeader">';
         html += '<input class="dropdownSearch" type="text" placeholder="Search..." data-action="searchDropdown" data-dropdown-id="' + p.dropdownId + '" value="' + this._escape(p.searchValue || "") + '" />';
-        html += '<button type="button" class="closeIcon" data-action="closeDropdown" data-dropdown-id="' + p.dropdownId + '" title="Close">×</button>';
         html += '</div>';
         html += '<div class="dropdownList">';
         if (p.filteredOptions.length > 0) {
@@ -851,9 +837,6 @@
       }
 
       html += '<div class="dropdownIcons">';
-      if (value) {
-        html += '<button type="button" class="clearIcon" data-action="clearSelect" data-row="' + rowIndex + '" data-field="' + column.key + '" title="Clear">×</button>';
-      }
       html += '<button type="button" class="dropdownArrow" data-action="toggleDropdown" data-dropdown-id="' + dropdownId + '" data-row="' + rowIndex + '" data-field="' + column.key + '" title="Open">▼</button>';
       html += '</div>';
       html += '</div>';
@@ -877,9 +860,6 @@
       }
 
       html += '<div class="dropdownIcons">';
-      if (value) {
-        html += '<button type="button" class="clearIcon" data-action="clearMonth" data-row="' + rowIndex + '" data-field="' + column.key + '" title="Clear">×</button>';
-      }
       html += '<button type="button" class="dropdownArrow" data-action="toggleMonth" data-picker-id="' + pickerId + '" data-row="' + rowIndex + '" data-field="' + column.key + '" title="Open">📅</button>';
       html += '</div>';
       html += '</div>';
@@ -921,7 +901,8 @@
 
       this._openMonthPicker = null;
       this._openDropdown = dropdownId;
-      this._refreshTable();
+      this._renderFloatingPanel();
+      this._bindEvents();
     }
 
     _openMonthPanel(rowIndex, fieldName, pickerId, anchorEl) {
@@ -950,7 +931,8 @@
 
       this._openDropdown = null;
       this._openMonthPicker = pickerId;
-      this._refreshTable();
+      this._renderFloatingPanel();
+      this._bindEvents();
     }
 
     _renderFieldErrors(fieldName, rowErrors) {
@@ -1047,9 +1029,13 @@
             if (that._openDropdown === dropdownId) {
               that._openDropdown = null;
               that._floatingPanelState = null;
-              that._refreshTable();
+              that._renderFloatingPanel();
             } else {
               that._openSelectPanel(rowIndex, fieldName, dropdownId, this.closest(".dropdownDisplay"));
+              setTimeout(function () {
+                var input = that._shadowRoot.querySelector('.dropdownSearch[data-dropdown-id="' + dropdownId + '"]');
+                if (input) input.focus();
+              }, 0);
             }
           });
         }
@@ -1059,7 +1045,7 @@
             e.stopPropagation();
             that._openDropdown = null;
             that._floatingPanelState = null;
-            that._refreshTable();
+            that._renderFloatingPanel();
           });
         }
 
@@ -1067,7 +1053,9 @@
           el.addEventListener("click", function (e) {
             e.stopPropagation();
           });
-          el.addEventListener("input", function () {
+
+          el.addEventListener("input", function (e) {
+            e.stopPropagation();
             var dropdownId = this.getAttribute("data-dropdown-id");
             that._dropdownSearchState[dropdownId] = this.value;
 
@@ -1080,6 +1068,14 @@
                   dropdownId,
                   anchor
                 );
+                setTimeout(function () {
+                  var input = that._shadowRoot.querySelector('.dropdownSearch[data-dropdown-id="' + dropdownId + '"]');
+                  if (input) {
+                    input.focus();
+                    var len = input.value.length;
+                    input.setSelectionRange(len, len);
+                  }
+                }, 0);
               }
             }
           });
@@ -1117,7 +1113,7 @@
             if (that._openMonthPicker === pickerId) {
               that._openMonthPicker = null;
               that._floatingPanelState = null;
-              that._refreshTable();
+              that._renderFloatingPanel();
             } else {
               that._openMonthPanel(rowIndex, fieldName, pickerId, this.closest(".monthDisplay"));
             }
@@ -1129,7 +1125,7 @@
             e.stopPropagation();
             that._openMonthPicker = null;
             that._floatingPanelState = null;
-            that._refreshTable();
+            that._renderFloatingPanel();
           });
         }
 
