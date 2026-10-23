@@ -16,17 +16,22 @@
       this._costCenterOptions = [];
       this._assetClassOptions = [];
 
+      this._openDropdown = null;
+      this._dropdownSearchState = {};
+      this._openMonthPicker = null;
+
       this._columns = [
         { key: "selected", label: "Sel", type: "checkbox", width: "70px" },
         { key: "ID", label: "ID", type: "input", width: "200px" },
         { key: "DESCRIPTION", label: "Description", type: "input", width: "240px" },
-        { key: "COMPANY", label: "Company", type: "select", width: "160px" },
-        { key: "COSTCENTER", label: "Cost Center", type: "select", width: "180px" },
-        { key: "ASSET_CLASS", label: "Asset Class", type: "select", width: "180px" },
-        { key: "CAPITALIZED", label: "Capitalized", type: "month", width: "170px" }
+        { key: "COMPANY", label: "Company", type: "select", width: "190px" },
+        { key: "COSTCENTER", label: "Cost Center", type: "select", width: "210px" },
+        { key: "ASSET_CLASS", label: "Asset Class", type: "select", width: "210px" },
+        { key: "CAPITALIZED", label: "Capitalized", type: "month", width: "210px" }
       ];
 
       this._render();
+      this._bindOutsideClick();
     }
 
     connectedCallback() {
@@ -166,20 +171,32 @@
       return "";
     }
 
-    _capitalizedToMonthInput(value) {
+    _capitalizedToDisplay(value) {
       var v = this._normalizeCapitalized(value);
       if (/^\d{6}$/.test(v)) {
-        return v.substring(0, 4) + "-" + v.substring(4, 6);
+        var year = v.substring(0, 4);
+        var month = v.substring(4, 6);
+        return year + " - " + this._getMonthShortName(month);
       }
       return "";
     }
 
-    _monthInputToCapitalized(value) {
-      var v = this._safeString(value);
-      if (/^\d{4}-\d{2}$/.test(v)) {
-        return v.replace("-", "");
-      }
-      return "";
+    _getMonthShortName(month) {
+      var map = {
+        "01": "Jan",
+        "02": "Feb",
+        "03": "Mar",
+        "04": "Apr",
+        "05": "May",
+        "06": "Jun",
+        "07": "Jul",
+        "08": "Aug",
+        "09": "Sep",
+        "10": "Oct",
+        "11": "Nov",
+        "12": "Dec"
+      };
+      return map[month] || "";
     }
 
     _render() {
@@ -278,7 +295,7 @@
             background: #fffbeb;
           }
 
-          .cell, .select {
+          .cell {
             width: 100%;
             min-height: 34px;
             height: 34px;
@@ -292,7 +309,7 @@
             outline: none;
           }
 
-          .cell.error, .select.error {
+          .cell.error {
             border-color: #e25555;
             background: #fff5f5;
           }
@@ -334,9 +351,276 @@
             height: 16px;
             cursor: pointer;
           }
+
+          .dropdownWrap {
+            position: relative;
+            width: 100%;
+          }
+
+          .dropdownDisplay {
+            width: 100%;
+            min-height: 34px;
+            height: 34px;
+            border: 1px solid #c9d6e5;
+            border-radius: 6px;
+            background: #fff;
+            box-sizing: border-box;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            padding: 0 8px 0 10px;
+            cursor: pointer;
+            font-size: 13px;
+          }
+
+          .dropdownDisplay.error {
+            border-color: #e25555;
+            background: #fff5f5;
+          }
+
+          .dropdownValue {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            flex: 1;
+            color: #223548;
+          }
+
+          .dropdownPlaceholder {
+            color: #6b7c93;
+          }
+
+          .dropdownIcons {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-shrink: 0;
+          }
+
+          .clearIcon,
+          .dropdownArrow,
+          .closeIcon {
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            color: #5f6b7a;
+            font-size: 14px;
+            line-height: 1;
+            padding: 0;
+            width: 18px;
+            height: 18px;
+          }
+
+          .dropdownPanel {
+            position: absolute;
+            top: calc(100% + 4px);
+            left: 0;
+            width: 100%;
+            min-width: 220px;
+            background: #fff;
+            border: 1px solid #c9d6e5;
+            border-radius: 8px;
+            box-shadow: 0 8px 24px rgba(34,53,72,0.16);
+            z-index: 20;
+            overflow: hidden;
+          }
+
+          .dropdownHeader {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px;
+            border-bottom: 1px solid #edf2f7;
+            background: #f8fbff;
+          }
+
+          .dropdownSearch {
+            flex: 1;
+            height: 32px;
+            border: 1px solid #c9d6e5;
+            border-radius: 6px;
+            padding: 6px 10px;
+            font-size: 13px;
+            box-sizing: border-box;
+            outline: none;
+          }
+
+          .dropdownList {
+            max-height: 220px;
+            overflow: auto;
+            background: #fff;
+          }
+
+          .dropdownItem {
+            padding: 8px 10px;
+            cursor: pointer;
+            font-size: 13px;
+            border-bottom: 1px solid #f4f7fb;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+          }
+
+          .dropdownItem:hover {
+            background: #f3f8fd;
+          }
+
+          .dropdownItem.selected {
+            background: #eaf3fc;
+            color: #0a6ed1;
+            font-weight: 600;
+          }
+
+          .dropdownEmpty {
+            padding: 10px;
+            font-size: 12px;
+            color: #6b7c93;
+          }
+
+          .dropdownFooter {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px;
+            border-top: 1px solid #edf2f7;
+            background: #f8fbff;
+          }
+
+          .linkBtn {
+            border: none;
+            background: transparent;
+            color: #0a6ed1;
+            font-size: 12px;
+            cursor: pointer;
+            padding: 0;
+          }
+
+          .monthWrap {
+            position: relative;
+            width: 100%;
+          }
+
+          .monthDisplay {
+            width: 100%;
+            min-height: 34px;
+            height: 34px;
+            border: 1px solid #c9d6e5;
+            border-radius: 6px;
+            background: #fff;
+            box-sizing: border-box;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            padding: 0 8px 0 10px;
+            cursor: pointer;
+            font-size: 13px;
+          }
+
+          .monthDisplay.error {
+            border-color: #e25555;
+            background: #fff5f5;
+          }
+
+          .monthValue {
+            flex: 1;
+            color: #223548;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+          }
+
+          .monthPlaceholder {
+            color: #6b7c93;
+          }
+
+          .monthPanel {
+            position: absolute;
+            top: calc(100% + 4px);
+            left: 0;
+            width: 250px;
+            background: #fff;
+            border: 1px solid #c9d6e5;
+            border-radius: 8px;
+            box-shadow: 0 8px 24px rgba(34,53,72,0.16);
+            z-index: 20;
+            overflow: hidden;
+          }
+
+          .monthHeader {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px;
+            border-bottom: 1px solid #edf2f7;
+            background: #f8fbff;
+          }
+
+          .yearSelect {
+            flex: 1;
+            height: 32px;
+            border: 1px solid #c9d6e5;
+            border-radius: 6px;
+            padding: 4px 8px;
+            font-size: 13px;
+            outline: none;
+            background: #fff;
+          }
+
+          .monthGrid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            padding: 10px;
+          }
+
+          .monthBtn {
+            border: 1px solid #c9d6e5;
+            background: #fff;
+            border-radius: 6px;
+            padding: 8px 0;
+            cursor: pointer;
+            font-size: 13px;
+            color: #223548;
+          }
+
+          .monthBtn:hover {
+            background: #f3f8fd;
+          }
+
+          .monthBtn.selected {
+            background: #5d6673;
+            border-color: #5d6673;
+            color: #fff;
+          }
+
+          .monthFooter {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px;
+            border-top: 1px solid #edf2f7;
+            background: #f8fbff;
+          }
         </style>
         <div class="wrap" id="widgetWrap"></div>
       `;
+    }
+
+    _bindOutsideClick() {
+      var that = this;
+      this._shadowRoot.addEventListener("click", function (e) {
+        e.stopPropagation();
+      });
+
+      document.addEventListener("click", function () {
+        if (that._openDropdown !== null || that._openMonthPicker !== null) {
+          that._openDropdown = null;
+          that._openMonthPicker = null;
+          that._refreshTable();
+        }
+      });
     }
 
     _hasSelectedRows() {
@@ -436,6 +720,16 @@
       this._bindEvents();
     }
 
+    _getSelectedText(fieldName, value) {
+      var options = this._getOptionsForField(fieldName);
+      for (var i = 0; i < options.length; i++) {
+        if (String(options[i].key) === String(value)) {
+          return options[i].text;
+        }
+      }
+      return "";
+    }
+
     _renderCell(row, rowIndex, column, rowErrors) {
       var value = row[column.key] !== undefined && row[column.key] !== null ? row[column.key] : "";
       var hasError = this._hasFieldError(column.key, rowErrors);
@@ -457,30 +751,163 @@
       }
 
       if (column.type === "month") {
-        return ''
-          + '<input class="cell ' + errorCss + '"'
-          + ' data-row="' + rowIndex + '"'
-          + ' data-field="' + column.key + '"'
-          + ' data-type="month"'
-          + ' type="month"'
-          + ' value="' + this._escape(this._capitalizedToMonthInput(String(value))) + '" />'
-          + this._renderFieldErrors(column.key, rowErrors);
+        return this._renderMonthCell(row, rowIndex, column, rowErrors, errorCss);
       }
 
       if (column.type === "select") {
-        var options = this._getOptionsForField(column.key);
-        var html = '<select class="select ' + errorCss + '" data-row="' + rowIndex + '" data-field="' + column.key + '" data-type="select">';
-        html += '<option value="">Select</option>';
-        for (var i = 0; i < options.length; i++) {
-          var selected = String(options[i].key) === String(value) ? 'selected' : '';
-          html += '<option value="' + this._escape(options[i].key) + '" ' + selected + '>' + this._escape(options[i].text) + '</option>';
-        }
-        html += '</select>';
-        html += this._renderFieldErrors(column.key, rowErrors);
-        return html;
+        return this._renderSelectCell(row, rowIndex, column, rowErrors, errorCss);
       }
 
       return "";
+    }
+
+    _renderSelectCell(row, rowIndex, column, rowErrors, errorCss) {
+      var value = this._safeString(row[column.key]);
+      var displayText = this._getSelectedText(column.key, value);
+      var placeholder = "Select";
+      var dropdownId = "dropdown_" + rowIndex + "_" + column.key;
+      var isOpen = this._openDropdown === dropdownId;
+      var searchValue = this._dropdownSearchState[dropdownId] || "";
+      var options = this._getOptionsForField(column.key);
+      var filteredOptions = [];
+
+      for (var i = 0; i < options.length; i++) {
+        var text = this._safeString(options[i].text).toLowerCase();
+        var key = this._safeString(options[i].key).toLowerCase();
+        var q = this._safeString(searchValue).toLowerCase();
+
+        if (q === "" || text.indexOf(q) !== -1 || key.indexOf(q) !== -1) {
+          filteredOptions.push(options[i]);
+        }
+      }
+
+      var html = '';
+      html += '<div class="dropdownWrap">';
+      html += '<div class="dropdownDisplay ' + errorCss + '" data-action="toggleDropdown" data-dropdown-id="' + dropdownId + '">';
+      if (displayText) {
+        html += '<div class="dropdownValue">' + this._escape(displayText) + '</div>';
+      } else {
+        html += '<div class="dropdownValue dropdownPlaceholder">' + this._escape(placeholder) + '</div>';
+      }
+
+      html += '<div class="dropdownIcons">';
+      if (value) {
+        html += '<button type="button" class="clearIcon" data-action="clearSelect" data-row="' + rowIndex + '" data-field="' + column.key + '" title="Clear">×</button>';
+      }
+      html += '<button type="button" class="dropdownArrow" data-action="toggleDropdown" data-dropdown-id="' + dropdownId + '" title="Open">▼</button>';
+      html += '</div>';
+      html += '</div>';
+
+      if (isOpen) {
+        html += '<div class="dropdownPanel">';
+        html += '<div class="dropdownHeader">';
+        html += '<input class="dropdownSearch" type="text" placeholder="Search..." data-action="searchDropdown" data-dropdown-id="' + dropdownId + '" value="' + this._escape(searchValue) + '" />';
+        html += '<button type="button" class="closeIcon" data-action="closeDropdown" data-dropdown-id="' + dropdownId + '" title="Close">×</button>';
+        html += '</div>';
+
+        html += '<div class="dropdownList">';
+        if (filteredOptions.length > 0) {
+          for (var j = 0; j < filteredOptions.length; j++) {
+            var selectedCss = String(filteredOptions[j].key) === String(value) ? 'selected' : '';
+            html += '<div class="dropdownItem ' + selectedCss + '" data-action="chooseOption" data-row="' + rowIndex + '" data-field="' + column.key + '" data-value="' + this._escape(filteredOptions[j].key) + '">' + this._escape(filteredOptions[j].text) + '</div>';
+          }
+        } else {
+          html += '<div class="dropdownEmpty">No results found</div>';
+        }
+        html += '</div>';
+
+        html += '<div class="dropdownFooter">';
+        html += '<button type="button" class="linkBtn" data-action="clearSelect" data-row="' + rowIndex + '" data-field="' + column.key + '">Clear selection</button>';
+        html += '<button type="button" class="linkBtn" data-action="closeDropdown" data-dropdown-id="' + dropdownId + '">Close</button>';
+        html += '</div>';
+        html += '</div>';
+      }
+
+      html += '</div>';
+      html += this._renderFieldErrors(column.key, rowErrors);
+      return html;
+    }
+
+    _renderMonthCell(row, rowIndex, column, rowErrors, errorCss) {
+      var value = this._safeString(row[column.key]);
+      var displayValue = this._capitalizedToDisplay(value);
+      var pickerId = "month_" + rowIndex + "_" + column.key;
+      var isOpen = this._openMonthPicker === pickerId;
+      var selectedYear = "2026";
+
+      if (/^\d{6}$/.test(value)) {
+        selectedYear = value.substring(0, 4);
+      }
+
+      var html = '';
+      html += '<div class="monthWrap">';
+      html += '<div class="monthDisplay ' + errorCss + '" data-action="toggleMonth" data-picker-id="' + pickerId + '">';
+      if (displayValue) {
+        html += '<div class="monthValue">' + this._escape(displayValue) + '</div>';
+      } else {
+        html += '<div class="monthValue monthPlaceholder">Select month</div>';
+      }
+
+      html += '<div class="dropdownIcons">';
+      if (value) {
+        html += '<button type="button" class="clearIcon" data-action="clearMonth" data-row="' + rowIndex + '" data-field="' + column.key + '" title="Clear">×</button>';
+      }
+      html += '<button type="button" class="dropdownArrow" data-action="toggleMonth" data-picker-id="' + pickerId + '" title="Open">📅</button>';
+      html += '</div>';
+      html += '</div>';
+
+      if (isOpen) {
+        html += '<div class="monthPanel">';
+        html += '<div class="monthHeader">';
+        html += '<select class="yearSelect" data-action="changeMonthYear" data-picker-id="' + pickerId + '" data-row="' + rowIndex + '" data-field="' + column.key + '">';
+
+        for (var year = 2026; year <= 3200; year++) {
+          var yearStr = String(year);
+          var selected = yearStr === selectedYear ? 'selected' : '';
+          html += '<option value="' + yearStr + '" ' + selected + '>' + yearStr + '</option>';
+        }
+
+        html += '</select>';
+        html += '<button type="button" class="closeIcon" data-action="closeMonth" data-picker-id="' + pickerId + '" title="Close">×</button>';
+        html += '</div>';
+
+        var monthNames = [
+          { key: "01", text: "Jan" },
+          { key: "02", text: "Feb" },
+          { key: "03", text: "Mar" },
+          { key: "04", text: "Apr" },
+          { key: "05", text: "May" },
+          { key: "06", text: "Jun" },
+          { key: "07", text: "Jul" },
+          { key: "08", text: "Aug" },
+          { key: "09", text: "Sep" },
+          { key: "10", text: "Oct" },
+          { key: "11", text: "Nov" },
+          { key: "12", text: "Dec" }
+        ];
+
+        var selectedMonth = "";
+        if (/^\d{6}$/.test(value)) {
+          selectedMonth = value.substring(4, 6);
+        }
+
+        html += '<div class="monthGrid">';
+        for (var m = 0; m < monthNames.length; m++) {
+          var selectedMonthCss = monthNames[m].key === selectedMonth ? 'selected' : '';
+          html += '<button type="button" class="monthBtn ' + selectedMonthCss + '" data-action="pickMonth" data-row="' + rowIndex + '" data-field="' + column.key + '" data-picker-id="' + pickerId + '" data-year="' + selectedYear + '" data-month="' + monthNames[m].key + '">' + monthNames[m].text + '</button>';
+        }
+        html += '</div>';
+
+        html += '<div class="monthFooter">';
+        html += '<button type="button" class="linkBtn" data-action="clearMonth" data-row="' + rowIndex + '" data-field="' + column.key + '">Clear selection</button>';
+        html += '<button type="button" class="linkBtn" data-action="closeMonth" data-picker-id="' + pickerId + '">Close</button>';
+        html += '</div>';
+        html += '</div>';
+      }
+
+      html += '</div>';
+      html += this._renderFieldErrors(column.key, rowErrors);
+      return html;
     }
 
     _renderFieldErrors(fieldName, rowErrors) {
@@ -553,7 +980,7 @@
           return;
         }
 
-        if (type === "input" || type === "select") {
+        if (type === "input") {
           el.addEventListener("change", function () {
             var rowIndex = parseInt(this.getAttribute("data-row"), 10);
             var fieldName = this.getAttribute("data-field");
@@ -562,13 +989,127 @@
           });
           return;
         }
+      });
 
-        if (type === "month") {
-          el.addEventListener("change", function () {
+      var actionElements = this._shadowRoot.querySelectorAll("[data-action]");
+      Array.prototype.forEach.call(actionElements, function (el) {
+        var action = el.getAttribute("data-action");
+
+        if (action === "toggleDropdown") {
+          el.addEventListener("click", function (e) {
+            e.stopPropagation();
+            var dropdownId = this.getAttribute("data-dropdown-id");
+            that._openMonthPicker = null;
+            that._openDropdown = that._openDropdown === dropdownId ? null : dropdownId;
+            that._refreshTable();
+          });
+        }
+
+        if (action === "closeDropdown") {
+          el.addEventListener("click", function (e) {
+            e.stopPropagation();
+            that._openDropdown = null;
+            that._refreshTable();
+          });
+        }
+
+        if (action === "searchDropdown") {
+          el.addEventListener("click", function (e) {
+            e.stopPropagation();
+          });
+          el.addEventListener("input", function () {
+            var dropdownId = this.getAttribute("data-dropdown-id");
+            that._dropdownSearchState[dropdownId] = this.value;
+            that._refreshTable();
+          });
+        }
+
+        if (action === "chooseOption") {
+          el.addEventListener("click", function (e) {
+            e.stopPropagation();
             var rowIndex = parseInt(this.getAttribute("data-row"), 10);
             var fieldName = this.getAttribute("data-field");
-            var value = that._monthInputToCapitalized(this.value);
+            var value = this.getAttribute("data-value");
+            that._openDropdown = null;
             that._updateField(rowIndex, fieldName, value);
+          });
+        }
+
+        if (action === "clearSelect") {
+          el.addEventListener("click", function (e) {
+            e.stopPropagation();
+            var rowIndex = parseInt(this.getAttribute("data-row"), 10);
+            var fieldName = this.getAttribute("data-field");
+            that._openDropdown = null;
+            that._updateField(rowIndex, fieldName, "");
+          });
+        }
+
+        if (action === "toggleMonth") {
+          el.addEventListener("click", function (e) {
+            e.stopPropagation();
+            var pickerId = this.getAttribute("data-picker-id");
+            that._openDropdown = null;
+            that._openMonthPicker = that._openMonthPicker === pickerId ? null : pickerId;
+            that._refreshTable();
+          });
+        }
+
+        if (action === "closeMonth") {
+          el.addEventListener("click", function (e) {
+            e.stopPropagation();
+            that._openMonthPicker = null;
+            that._refreshTable();
+          });
+        }
+
+        if (action === "changeMonthYear") {
+          el.addEventListener("click", function (e) {
+            e.stopPropagation();
+          });
+          el.addEventListener("change", function (e) {
+            e.stopPropagation();
+            var pickerId = this.getAttribute("data-picker-id");
+            var rowIndex = parseInt(this.getAttribute("data-row"), 10);
+            var fieldName = this.getAttribute("data-field");
+            var currentValue = that._safeString(that._rows[rowIndex][fieldName]);
+            var month = "01";
+
+            if (/^\d{6}$/.test(currentValue)) {
+              month = currentValue.substring(4, 6);
+            }
+
+            that._rows[rowIndex][fieldName] = this.value + month;
+            that._openMonthPicker = pickerId;
+            that._rows[rowIndex].isModified = true;
+            that._rows[rowIndex].rowStatus = "CHANGED";
+            that._widgetStatus = "CHANGED";
+            that._validationErrors = [];
+            that._validationResult = "true";
+            that._syncRows();
+            that._refreshTable();
+          });
+        }
+
+        if (action === "pickMonth") {
+          el.addEventListener("click", function (e) {
+            e.stopPropagation();
+            var rowIndex = parseInt(this.getAttribute("data-row"), 10);
+            var fieldName = this.getAttribute("data-field");
+            var year = this.getAttribute("data-year");
+            var month = this.getAttribute("data-month");
+            that._openMonthPicker = null;
+            that._updateField(rowIndex, fieldName, year + month);
+          });
+        }
+
+        if (action === "clearMonth") {
+          el.addEventListener("click", function (e) {
+            e.stopPropagation();
+            var rowIndex = parseInt(this.getAttribute("data-row"), 10);
+            var fieldName = this.getAttribute("data-field");
+            that._openMonthPicker = null;
+            that._updateField(rowIndex, fieldName, "");
           });
         }
       });
@@ -690,6 +1231,9 @@
       this._savePayload = [];
       this._lastEvent = JSON.stringify({ type: "clear" });
       this._widgetStatus = "READY";
+      this._openDropdown = null;
+      this._openMonthPicker = null;
+      this._dropdownSearchState = {};
       this._syncRows();
       this._refreshTable();
       this._fireSimpleEvent("onDataChange", { rows: this._rows });
@@ -893,4 +1437,4 @@
   if (!customElements.get("com-company-assetentrywidget")) {
     customElements.define("com-company-assetentrywidget", AssetEntryWidget);
   }
-})(); 
+})();
