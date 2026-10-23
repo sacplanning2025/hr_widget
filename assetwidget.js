@@ -212,7 +212,8 @@
             border: 1px solid #d9e2ef;
             border-radius: 12px;
             background: #ffffff;
-            overflow: hidden;
+            overflow: visible;
+            position: relative;
           }
 
           .toolbar {
@@ -253,9 +254,11 @@
           }
 
           .gridWrap {
-            overflow: auto;
+            overflow-x: auto;
+            overflow-y: visible;
             max-height: 520px;
             background: #ffffff;
+            position: relative;
           }
 
           table {
@@ -265,11 +268,17 @@
             min-width: 100%;
           }
 
+          thead, tbody, tr {
+            overflow: visible;
+          }
+
           th, td {
             border-bottom: 1px solid #edf2f7;
             padding: 8px;
             vertical-align: top;
             white-space: nowrap;
+            overflow: visible;
+            position: relative;
           }
 
           th {
@@ -352,12 +361,15 @@
             cursor: pointer;
           }
 
-          .dropdownWrap {
+          .dropdownWrap,
+          .monthWrap {
             position: relative;
             width: 100%;
+            overflow: visible;
           }
 
-          .dropdownDisplay {
+          .dropdownDisplay,
+          .monthDisplay {
             width: 100%;
             min-height: 34px;
             height: 34px;
@@ -374,12 +386,14 @@
             font-size: 13px;
           }
 
-          .dropdownDisplay.error {
+          .dropdownDisplay.error,
+          .monthDisplay.error {
             border-color: #e25555;
             background: #fff5f5;
           }
 
-          .dropdownValue {
+          .dropdownValue,
+          .monthValue {
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
@@ -387,7 +401,8 @@
             color: #223548;
           }
 
-          .dropdownPlaceholder {
+          .dropdownPlaceholder,
+          .monthPlaceholder {
             color: #6b7c93;
           }
 
@@ -422,11 +437,12 @@
             border: 1px solid #c9d6e5;
             border-radius: 8px;
             box-shadow: 0 8px 24px rgba(34,53,72,0.16);
-            z-index: 20;
+            z-index: 9999;
             overflow: hidden;
           }
 
-          .dropdownHeader {
+          .dropdownHeader,
+          .monthHeader {
             display: flex;
             align-items: center;
             gap: 8px;
@@ -478,7 +494,8 @@
             color: #6b7c93;
           }
 
-          .dropdownFooter {
+          .dropdownFooter,
+          .monthFooter {
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -496,45 +513,6 @@
             padding: 0;
           }
 
-          .monthWrap {
-            position: relative;
-            width: 100%;
-          }
-
-          .monthDisplay {
-            width: 100%;
-            min-height: 34px;
-            height: 34px;
-            border: 1px solid #c9d6e5;
-            border-radius: 6px;
-            background: #fff;
-            box-sizing: border-box;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 8px;
-            padding: 0 8px 0 10px;
-            cursor: pointer;
-            font-size: 13px;
-          }
-
-          .monthDisplay.error {
-            border-color: #e25555;
-            background: #fff5f5;
-          }
-
-          .monthValue {
-            flex: 1;
-            color: #223548;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-          }
-
-          .monthPlaceholder {
-            color: #6b7c93;
-          }
-
           .monthPanel {
             position: absolute;
             top: calc(100% + 4px);
@@ -544,17 +522,8 @@
             border: 1px solid #c9d6e5;
             border-radius: 8px;
             box-shadow: 0 8px 24px rgba(34,53,72,0.16);
-            z-index: 20;
+            z-index: 9999;
             overflow: hidden;
-          }
-
-          .monthHeader {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 8px;
-            border-bottom: 1px solid #edf2f7;
-            background: #f8fbff;
           }
 
           .yearSelect {
@@ -593,15 +562,6 @@
             background: #5d6673;
             border-color: #5d6673;
             color: #fff;
-          }
-
-          .monthFooter {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 8px;
-            border-top: 1px solid #edf2f7;
-            background: #f8fbff;
           }
         </style>
         <div class="wrap" id="widgetWrap"></div>
@@ -1438,3 +1398,4 @@
     customElements.define("com-company-assetentrywidget", AssetEntryWidget);
   }
 })();
+
