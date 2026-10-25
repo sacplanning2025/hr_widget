@@ -1,6 +1,6 @@
 {
   "id": "com.company.assetentrywidget",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "name": "Asset Entry Widget",
   "description": "Asset entry table widget for SAC",
   "vendor": "Arnav Choudhary",
@@ -73,6 +73,13 @@
     "setAssetClassOptions": {
       "parameters": [
         { "name": "json", "type": "string" }
+      ]
+    },
+    "setCellValue": {
+      "parameters": [
+        { "name": "rowIndex", "type": "integer" },
+        { "name": "fieldName", "type": "string" },
+        { "name": "value", "type": "string" }
       ]
     },
     "setVisible": {
