@@ -26,12 +26,12 @@
 
       this._columns = [
         { key: "selected", label: "Sel", type: "checkbox", width: "70px" },
-        { key: "ID", label: "ID", type: "input", width: "200px" },
-        { key: "DESCRIPTION", label: "Description", type: "input", width: "240px" },
-        { key: "COMPANY", label: "Company", type: "select", width: "190px" },
+         { key: "COMPANY", label: "Company", type: "select", width: "190px" },
         { key: "COSTCENTER", label: "Cost Center", type: "select", width: "210px" },
         { key: "ASSET_CLASS", label: "Asset Class", type: "select", width: "210px" },
-        { key: "CAPITALIZED", label: "Capitalized", type: "month", width: "210px" }
+        { key: "CAPITALIZED", label: "Capitalized", type: "month", width: "210px" },
+        { key: "ID", label: "ID", type: "input", width: "200px" },
+        { key: "DESCRIPTION", label: "Description", type: "input", width: "240px" }
       ];
 
       this._render();
@@ -85,12 +85,12 @@
         selected: false,
         isModified: false,
         rowStatus: "NEW",
-        ID: "",
-        DESCRIPTION: "",
         COMPANY: "",
         COSTCENTER: "",
         ASSET_CLASS: "",
-        CAPITALIZED: ""
+        CAPITALIZED: "",
+         ID: "",
+         DESCRIPTION: ""
       };
     }
 
@@ -1010,12 +1010,13 @@
             selected: false,
             isModified: true,
             rowStatus: "NEW",
-            ID: this._rows[i].ID || "",
-            DESCRIPTION: this._rows[i].DESCRIPTION || "",
+           
             COMPANY: this._rows[i].COMPANY || "",
             COSTCENTER: this._rows[i].COSTCENTER || "",
             ASSET_CLASS: this._rows[i].ASSET_CLASS || "",
-            CAPITALIZED: this._rows[i].CAPITALIZED || ""
+            CAPITALIZED: this._rows[i].CAPITALIZED || "",
+             ID: this._rows[i].ID || "",
+            DESCRIPTION: this._rows[i].DESCRIPTION || ""
           });
         }
       }
