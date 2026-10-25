@@ -1041,7 +1041,7 @@
             COSTCENTER: this._rows[i].COSTCENTER || "",
             ASSET_CLASS: this._rows[i].ASSET_CLASS || "",
             CAPITALIZED: this._rows[i].CAPITALIZED || "",
-            ID: this._rows[i].ID || "",
+            ID: "",
             DESCRIPTION: this._rows[i].DESCRIPTION || ""
           });
         }
@@ -1058,6 +1058,23 @@
       this._syncRows();
       this._refreshTable();
       this._fireSimpleEvent("onDataChange", { rows: this._rows });
+
+      for (var k = this._rows.length - copiedRows.length; k < this._rows.length; k++) {
+        if (this._rows[k].COMPANY && this._rows[k].CAPITALIZED) {
+          this._lastEvent = JSON.stringify({
+            type: "fieldChange",
+            rowIndex: k,
+            field: "COMPANY",
+            value: this._rows[k].COMPANY
+          });
+          this._syncRows();
+          this._fireSimpleEvent("onFieldChange", {
+            rowIndex: k,
+            field: "COMPANY",
+            value: this._rows[k].COMPANY
+          });
+        }
+      }
     }
 
     deleteSelectedRows() {
@@ -1292,6 +1309,144 @@
     customElements.define("com-company-assetentrywidget", AssetEntryWidget);
   }
 })();
+this is the current widget code and var evt = AssetEntryWidget_1.getLastEvent();
+
+// Ignore non-field change events
+if (evt.indexOf("\"type\":\"fieldChange\"") === -1) {
+	return;
+}
+
+//================= PARSE EVENT STRING =================//
+
+var rowIndex = -1;
+var fieldName = "";
+var fieldValue = "";
+
+var rowKey = "\"rowIndex\":";
+var fieldKey = "\"field\":\"";
+var valueKey = "\"value\":\"";
+
+var rowPos = evt.indexOf(rowKey);
+if (rowPos > -1) {
+	var rowStart = rowPos + rowKey.length;
+	var rowEnd = evt.indexOf(",", rowStart);
+
+	if (rowEnd === -1) {
+		rowEnd = evt.indexOf("}", rowStart);
+	}
+
+	var rowText = evt.substring(rowStart, rowEnd);
+	rowIndex = ConvertUtils.stringToInteger(rowText);
+}
+
+var fieldPos = evt.indexOf(fieldKey);
+if (fieldPos > -1) {
+	var fieldStart = fieldPos + fieldKey.length;
+	var fieldEnd = evt.indexOf("\"", fieldStart);
+	fieldName = evt.substring(fieldStart, fieldEnd);
+}
+
+var valuePos = evt.indexOf(valueKey);
+if (valuePos > -1) {
+	var valueStart = valuePos + valueKey.length;
+	var valueEnd = evt.indexOf("\"", valueStart);
+	fieldValue = evt.substring(valueStart, valueEnd);
+}
+
+if (fieldName !== "COMPANY" && fieldName !== "CAPITALIZED") {
+	return;
+}
+
+if (rowIndex < 0) {
+	return;
+}
+
+var companyVal = AssetEntryWidget_1.getRowValue(rowIndex, "COMPANY");
+var capitalizedVal = AssetEntryWidget_1.getRowValue(rowIndex, "CAPITALIZED");
+
+companyVal = companyVal.trim();
+capitalizedVal = capitalizedVal.trim();
+
+if (companyVal === "" || capitalizedVal === "") {
+	return;
+}
+
+if (capitalizedVal.length !== 6) {
+	return;
+}
+
+Application.showBusyIndicator("Generating Asset ID...");
+
+//================= LOAD EXISTING ASSET IDS FROM MODEL =================//
+
+var assetMembers = AHCP_CAPEX.getMembers("AHC_ASSET", {limit: 10000});
+var existingIds = ArrayUtils.create(Type.string);
+
+var i = 0;
+for (i = 0; i < assetMembers.length; i++) {
+	var modelId = "";
+
+	if (assetMembers[i].id !== undefined) {
+		modelId = assetMembers[i].id;
+	}
+
+	modelId = modelId.trim();
+
+	if (modelId !== "") {
+		existingIds.push(modelId);
+	}
+}
+
+//================= INCLUDE IDS ALREADY PRESENT IN WIDGET =================//
+
+var totalRows = AssetEntryWidget_1.getRowCount();
+
+for (i = 0; i < totalRows; i++) {
+	if (i !== rowIndex) {
+		var rowIdVal = AssetEntryWidget_1.getRowValue(i, "ID");
+		rowIdVal = rowIdVal.trim();
+
+		if (rowIdVal !== "") {
+			existingIds.push(rowIdVal);
+		}
+	}
+}
+
+//================= GENERATE NEXT ID =================//
+
+var yearPart = capitalizedVal.substr(0, 4);
+var prefix = companyVal + "-" + yearPart + "-";
+var maxSeq = 0;
+
+for (i = 0; i < existingIds.length; i++) {
+	var testId = existingIds[i];
+
+	if (testId.indexOf(prefix) === 0) {
+		var suffix = testId.substr(prefix.length);
+		var seq = ConvertUtils.stringToInteger(suffix);
+
+		if (seq > maxSeq) {
+			maxSeq = seq;
+		}
+	}
+}
+
+maxSeq = maxSeq + 1;
+
+var seqText = "";
+if (maxSeq < 10) {
+	seqText = "0" + ConvertUtils.numberToString(maxSeq);
+} else {
+	seqText = ConvertUtils.numberToString(maxSeq);
+}
+
+var generatedId = prefix + seqText;
+
+//================= WRITE BACK TO WIDGET =================//
+
+AssetEntryWidget_1.setCellValue(rowIndex, "ID", generatedId);
+
+Application.hideBusyIndicator(); 
 
 /*(function () {
   class AssetEntryWidget extends HTMLElement {
