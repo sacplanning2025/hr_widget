@@ -3,7 +3,6 @@
     constructor() {
       super();
       this._shadowRoot = this.attachShadow({ mode: "open" });
-
       this._rows = [];
       this._validationErrors = [];
       this._validationResult = "true";
@@ -11,19 +10,15 @@
       this._savePayload = [];
       this._widgetStatus = "READY";
       this._rowSequence = 1;
-
       this._companyOptions = [];
       this._costCenterOptions = [];
       this._assetClassOptions = [];
-
       this._openDropdown = null;
       this._dropdownSearchState = {};
       this._openMonthPicker = null;
       this._floatingPanelState = null;
-
       this._dropdownBatchSize = 100;
       this._dropdownSearchTimer = null;
-
       this._columns = [
         { key: "selected", label: "Sel", type: "checkbox", width: "70px" },
         { key: "COMPANY", label: "Company", type: "select", width: "190px" },
@@ -33,7 +28,6 @@
         { key: "ID", label: "ID", type: "readonly", width: "200px" },
         { key: "DESCRIPTION", label: "Description", type: "input", width: "240px" }
       ];
-
       this._render();
       this._bindOutsideClick();
     }
@@ -54,24 +48,20 @@
 
     attributeChangedCallback(name, oldValue, newValue) {
       if (oldValue === newValue) return;
-
       if (name === "rows") {
         this.setRows(newValue || "[]");
         return;
       }
-
       if (name === "companyOptions") {
         this._companyOptions = this._parseOptions(newValue);
         this._refreshTable();
         return;
       }
-
       if (name === "costCenterOptions") {
         this._costCenterOptions = this._parseOptions(newValue);
         this._refreshTable();
         return;
       }
-
       if (name === "assetClassOptions") {
         this._assetClassOptions = this._parseOptions(newValue);
         this._refreshTable();
@@ -99,7 +89,6 @@
       if (row.selected !== true) row.selected = false;
       if (row.isModified !== true) row.isModified = false;
       if (!row.rowStatus) row.rowStatus = "LOADED";
-
       row.ID = this._safeString(row.ID);
       row.DESCRIPTION = this._safeString(row.DESCRIPTION);
       row.COMPANY = this._safeString(row.COMPANY);
@@ -132,7 +121,6 @@
       try {
         var arr = JSON.parse(json || "[]");
         if (!Array.isArray(arr)) return [];
-
         var normalized = [];
         for (var i = 0; i < arr.length; i++) {
           var item = arr[i];
@@ -229,7 +217,6 @@
           .row-checkbox { width: 22px; height: 22px; cursor: pointer; margin-top: 8px; }
           .select-all-wrap { display: flex; align-items: center; gap: 6px; }
           .select-all-checkbox { width: 16px; height: 16px; cursor: pointer; }
-
           .dropdownWrap, .monthWrap { position: relative; width: 100%; overflow: visible; }
           .dropdownDisplay, .monthDisplay {
             width: 100%;
@@ -251,18 +238,7 @@
           .dropdownValue, .monthValue { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; color: #223548; }
           .dropdownPlaceholder, .monthPlaceholder { color: #6b7c93; }
           .dropdownIcons { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
-          .dropdownArrow, .closeIcon {
-            border: none;
-            background: transparent;
-            cursor: pointer;
-            color: #5f6b7a;
-            font-size: 14px;
-            line-height: 1;
-            padding: 0;
-            width: 18px;
-            height: 18px;
-          }
-
+          .dropdownArrow, .closeIcon { border: none; background: transparent; cursor: pointer; color: #5f6b7a; font-size: 14px; line-height: 1; padding: 0; width: 18px; height: 18px; }
           .dropdownHeader, .monthHeader { display: flex; align-items: center; gap: 8px; padding: 8px; border-bottom: 1px solid #edf2f7; background: #f8fbff; }
           .dropdownSearch { flex: 1; height: 32px; border: 1px solid #c9d6e5; border-radius: 6px; padding: 6px 10px; font-size: 13px; box-sizing: border-box; outline: none; }
           .dropdownList { max-height: 220px; overflow: auto; background: #fff; }
@@ -271,7 +247,6 @@
           .dropdownItem.selected { background: #eaf3fc; color: #0a6ed1; font-weight: 600; }
           .dropdownEmpty { padding: 10px; font-size: 12px; color: #6b7c93; }
           .dropdownMore { padding: 8px 10px; font-size: 12px; color: #6b7c93; text-align: center; border-top: 1px solid #edf2f7; background: #fafcff; }
-
           .dropdownFooter, .monthFooter { display: flex; justify-content: space-between; align-items: center; padding: 8px; border-top: 1px solid #edf2f7; background: #f8fbff; }
           .linkBtn { border: none; background: transparent; color: #0a6ed1; font-size: 12px; cursor: pointer; padding: 0; }
           .yearSelect { flex: 1; height: 32px; border: 1px solid #c9d6e5; border-radius: 6px; padding: 4px 8px; font-size: 13px; outline: none; background: #fff; }
@@ -279,7 +254,6 @@
           .monthBtn { border: 1px solid #c9d6e5; background: #fff; border-radius: 6px; padding: 8px 0; cursor: pointer; font-size: 13px; color: #223548; }
           .monthBtn:hover { background: #f3f8fd; }
           .monthBtn.selected { background: #5d6673; border-color: #5d6673; color: #fff; }
-
           .floatingLayer { position: absolute; inset: 0; overflow: visible; pointer-events: none; z-index: 999998; }
           .floatingPanel { position: absolute; background: #fff; border: 1px solid #c9d6e5; border-radius: 8px; box-shadow: 0 8px 24px rgba(34,53,72,0.16); z-index: 999999; overflow: hidden; pointer-events: auto; }
           .floatingDropdownPanel { min-width: 220px; }
@@ -297,11 +271,9 @@
 
     _bindOutsideClick() {
       var that = this;
-
       this._shadowRoot.addEventListener("click", function (e) {
         e.stopPropagation();
       });
-
       document.addEventListener("click", function () {
         if (that._openDropdown !== null || that._openMonthPicker !== null) {
           that._openDropdown = null;
@@ -812,17 +784,14 @@
 
           el.oninput = function (e) {
             e.stopPropagation();
-
             var inputEl = this;
             var dropdownId = inputEl.getAttribute("data-dropdown-id");
-
             if (that._dropdownSearchTimer) {
               clearTimeout(that._dropdownSearchTimer);
             }
 
             that._dropdownSearchTimer = setTimeout(function () {
               that._dropdownSearchState[dropdownId] = inputEl.value;
-
               if (that._floatingPanelState && that._floatingPanelState.type === "select") {
                 var fieldName = that._floatingPanelState.fieldName;
                 that._floatingPanelState.searchValue = inputEl.value;
@@ -973,23 +942,13 @@
     }
 
     setCellValue(rowIndex, fieldName, value) {
-      if (rowIndex < 0 || rowIndex >= this._rows.length) {
-        return;
-      }
-
+      if (rowIndex < 0 || rowIndex >= this._rows.length) return;
       this._rows[rowIndex][fieldName] = value;
       this._rows[rowIndex].isModified = true;
       this._rows[rowIndex].rowStatus = "CHANGED";
       this._validationErrors = [];
       this._validationResult = "true";
       this._widgetStatus = "CHANGED";
-      this._lastEvent = JSON.stringify({
-        type: "fieldChange",
-        rowIndex: rowIndex,
-        field: fieldName,
-        value: value
-      });
-
       this._syncRows();
       this._refreshTable();
     }
@@ -1308,145 +1267,7 @@
   if (!customElements.get("com-company-assetentrywidget")) {
     customElements.define("com-company-assetentrywidget", AssetEntryWidget);
   }
-})();
-this is the current widget code and var evt = AssetEntryWidget_1.getLastEvent();
-
-// Ignore non-field change events
-if (evt.indexOf("\"type\":\"fieldChange\"") === -1) {
-	return;
-}
-
-//================= PARSE EVENT STRING =================//
-
-var rowIndex = -1;
-var fieldName = "";
-var fieldValue = "";
-
-var rowKey = "\"rowIndex\":";
-var fieldKey = "\"field\":\"";
-var valueKey = "\"value\":\"";
-
-var rowPos = evt.indexOf(rowKey);
-if (rowPos > -1) {
-	var rowStart = rowPos + rowKey.length;
-	var rowEnd = evt.indexOf(",", rowStart);
-
-	if (rowEnd === -1) {
-		rowEnd = evt.indexOf("}", rowStart);
-	}
-
-	var rowText = evt.substring(rowStart, rowEnd);
-	rowIndex = ConvertUtils.stringToInteger(rowText);
-}
-
-var fieldPos = evt.indexOf(fieldKey);
-if (fieldPos > -1) {
-	var fieldStart = fieldPos + fieldKey.length;
-	var fieldEnd = evt.indexOf("\"", fieldStart);
-	fieldName = evt.substring(fieldStart, fieldEnd);
-}
-
-var valuePos = evt.indexOf(valueKey);
-if (valuePos > -1) {
-	var valueStart = valuePos + valueKey.length;
-	var valueEnd = evt.indexOf("\"", valueStart);
-	fieldValue = evt.substring(valueStart, valueEnd);
-}
-
-if (fieldName !== "COMPANY" && fieldName !== "CAPITALIZED") {
-	return;
-}
-
-if (rowIndex < 0) {
-	return;
-}
-
-var companyVal = AssetEntryWidget_1.getRowValue(rowIndex, "COMPANY");
-var capitalizedVal = AssetEntryWidget_1.getRowValue(rowIndex, "CAPITALIZED");
-
-companyVal = companyVal.trim();
-capitalizedVal = capitalizedVal.trim();
-
-if (companyVal === "" || capitalizedVal === "") {
-	return;
-}
-
-if (capitalizedVal.length !== 6) {
-	return;
-}
-
-Application.showBusyIndicator("Generating Asset ID...");
-
-//================= LOAD EXISTING ASSET IDS FROM MODEL =================//
-
-var assetMembers = AHCP_CAPEX.getMembers("AHC_ASSET", {limit: 10000});
-var existingIds = ArrayUtils.create(Type.string);
-
-var i = 0;
-for (i = 0; i < assetMembers.length; i++) {
-	var modelId = "";
-
-	if (assetMembers[i].id !== undefined) {
-		modelId = assetMembers[i].id;
-	}
-
-	modelId = modelId.trim();
-
-	if (modelId !== "") {
-		existingIds.push(modelId);
-	}
-}
-
-//================= INCLUDE IDS ALREADY PRESENT IN WIDGET =================//
-
-var totalRows = AssetEntryWidget_1.getRowCount();
-
-for (i = 0; i < totalRows; i++) {
-	if (i !== rowIndex) {
-		var rowIdVal = AssetEntryWidget_1.getRowValue(i, "ID");
-		rowIdVal = rowIdVal.trim();
-
-		if (rowIdVal !== "") {
-			existingIds.push(rowIdVal);
-		}
-	}
-}
-
-//================= GENERATE NEXT ID =================//
-
-var yearPart = capitalizedVal.substr(0, 4);
-var prefix = companyVal + "-" + yearPart + "-";
-var maxSeq = 0;
-
-for (i = 0; i < existingIds.length; i++) {
-	var testId = existingIds[i];
-
-	if (testId.indexOf(prefix) === 0) {
-		var suffix = testId.substr(prefix.length);
-		var seq = ConvertUtils.stringToInteger(suffix);
-
-		if (seq > maxSeq) {
-			maxSeq = seq;
-		}
-	}
-}
-
-maxSeq = maxSeq + 1;
-
-var seqText = "";
-if (maxSeq < 10) {
-	seqText = "0" + ConvertUtils.numberToString(maxSeq);
-} else {
-	seqText = ConvertUtils.numberToString(maxSeq);
-}
-
-var generatedId = prefix + seqText;
-
-//================= WRITE BACK TO WIDGET =================//
-
-AssetEntryWidget_1.setCellValue(rowIndex, "ID", generatedId);
-
-Application.hideBusyIndicator(); 
+})(); 
 
 /*(function () {
   class AssetEntryWidget extends HTMLElement {
