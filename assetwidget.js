@@ -967,26 +967,22 @@
     }
 
     setCellValue(rowIndex, fieldName, value) {
-      if (rowIndex < 0 || rowIndex >= this._rows.length) {
-        return;
-      }
+  if (rowIndex < 0 || rowIndex >= this._rows.length) {
+    return;
+  }
 
-      this._rows[rowIndex][fieldName] = value;
-      this._rows[rowIndex].isModified = true;
-      this._rows[rowIndex].rowStatus = "CHANGED";
-      this._validationErrors = [];
-      this._validationResult = "true";
-      this._widgetStatus = "CHANGED";
-      this._lastEvent = JSON.stringify({
-        type: "fieldChange",
-        rowIndex: rowIndex,
-        field: fieldName,
-        value: value
-      });
+  this._rows[rowIndex][fieldName] = value;
+  this._rows[rowIndex].isModified = true;
+  this._rows[rowIndex].rowStatus = "CHANGED";
+  this._validationErrors = [];
+  this._validationResult = "true";
+  this._widgetStatus = "CHANGED";
 
-      this._syncRows();
-      this._refreshTable();
-    }
+  this._syncRows();
+  this._refreshTable();
+  this._fireSimpleEvent("onDataChange", { rows: this._rows });
+}
+
 
     _fireSimpleEvent(name, detail) {
       this.dispatchEvent(new CustomEvent(name, { detail: detail }));
